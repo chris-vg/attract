@@ -103,6 +103,6 @@ function main()
     init_options_menu();
 }
 
-layout.set_layout_dimensions(scalar2(1920,1080));
+// layout.set_layout_dimensions(scalar2(1920,1080));
 
 main()
