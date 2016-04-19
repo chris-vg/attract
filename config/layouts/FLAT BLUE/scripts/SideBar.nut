@@ -29,14 +29,32 @@ class Panel
     function get_panel_text(index_offset)
     {
         local msg = "";
+        local arr = null;
         if (fe.game_info(Info.CloneOf, index_offset) == "")
         {
-            local arr = split(fe.game_info(Info.Title, index_offset), "(/[");
+            arr = split(fe.game_info(Info.Title, index_offset), "(/[");
             if (arr.len() > 0) return strip(arr[0]);
         }
         else
         {
-            msg = fe.game_info(Info.Title, index_offset);
+            arr = split(fe.game_info(Info.Title, index_offset), "(");
+            if (arr.len() > 0)
+            {
+                msg = strip(arr[0]);
+                for (local i = 1; i < arr.len(); i++)
+                {
+                    msg += " (" + rstrip(arr[i]);
+                }
+            }
+            arr = split(msg, "[");
+            if (arr.len() > 0)
+            {
+                msg = strip(arr[0]);
+                for (local i = 1; i < arr.len(); i++)
+                {
+                    msg += " [" + rstrip(arr[i]);
+                }
+            }
         }
         return msg;
     }
