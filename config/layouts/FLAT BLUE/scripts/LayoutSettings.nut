@@ -221,7 +221,7 @@ class LayoutSettings
                 settings.bg.preserve_vert <- "fill";
                 settings.bg.preserve_horiz <- "fill";
 
-                settings.sidebar.panel_dimensions <- (get_lowres_flag()) ? convert_scalar2(scalar2(380, 205)) : convert_scalar2(scalar2(340, 159));
+                settings.sidebar.panel_dimensions <- (get_lowres_flag()) ? convert_scalar2(scalar2(380, 205)) : convert_scalar2(scalar2(375, 159));
 
                 settings.bg.wheel_dimensions <- convert_scalar2(scalar2(450, 240));
                 settings.bg.wheel_pos <- scalar2(settings.sidebar.panel_dimensions.w + (((convert_width(settings.base_dimensions.w) - settings.sidebar.panel_dimensions.w) / 2) - (settings.bg.wheel_dimensions.w / 2)), convert_height(250));
@@ -255,6 +255,11 @@ class LayoutSettings
                 settings.infopanel.game_shadow_image <- "images/infopanel_game_bg_shadow_vert.png";
                 settings.infopanel.game_shadow_dimensions <- convert_scalar2(scalar2(520, 248));
                 settings.infopanel.game_shadow_pos <- scalar2(convert_width(settings.base_dimensions.w) - settings.infopanel.game_shadow_dimensions.w, 0);
+
+                settings.sidebar.panel_text_charsize <- (get_lowres_flag()) ? convert_height(27) : convert_height(20);
+                settings.sidebar.panel_selected_text_charsize <-  (get_lowres_flag()) ? convert_height(27) : convert_height(22);
+                settings.infopanel.filter_text_charsize <- (get_lowres_flag()) ? convert_height(27) : convert_height(22);
+                settings.infopanel.game_text_charsize <- (get_lowres_flag()) ? convert_height(27) : convert_height(22);
                 break;
 
             case "4:3":
@@ -263,7 +268,7 @@ class LayoutSettings
                 settings.bg.preserve_vert <- (get_lowres_flag() && get_user_config("scanline_strength") != "None") ? "fill" : "fit";
                 settings.bg.preserve_horiz <- "fill";
 
-                settings.sidebar.panel_dimensions <- (get_lowres_flag()) ? convert_scalar2(scalar2(380, 215)) : convert_scalar2(scalar2(360, 154));
+                settings.sidebar.panel_dimensions <- (get_lowres_flag()) ? convert_scalar2(scalar2(380, 215)) : convert_scalar2(scalar2(385, 154));
 
                 settings.bg.wheel_dimensions <- convert_scalar2(scalar2(450, 240));
                 settings.bg.wheel_pos <- scalar2(convert_width(settings.base_dimensions.w) - (settings.bg.wheel_dimensions.w + convert_width(50)), convert_height(65));
@@ -297,6 +302,11 @@ class LayoutSettings
                 settings.infopanel.game_shadow_image <- null;
                 settings.infopanel.game_shadow_dimensions <- null;
                 settings.infopanel.game_shadow_pos <- null;
+
+                settings.sidebar.panel_text_charsize <- (get_lowres_flag()) ? convert_height(24) : convert_height(20);
+                settings.sidebar.panel_selected_text_charsize <-  (get_lowres_flag()) ? convert_height(26) : convert_height(22);
+                settings.infopanel.filter_text_charsize <- (get_lowres_flag()) ? convert_height(24) : convert_height(22);
+                settings.infopanel.game_text_charsize <- (get_lowres_flag()) ? convert_height(24) : convert_height(22);
                 break;
 
             case "4:5":
@@ -305,7 +315,7 @@ class LayoutSettings
                 settings.bg.preserve_vert <- "fill";
                 settings.bg.preserve_horiz <- "fill";
 
-                settings.sidebar.panel_dimensions <- (get_lowres_flag()) ? convert_scalar2(scalar2(360, 192)) : convert_scalar2(scalar2(340, 149));
+                settings.sidebar.panel_dimensions <- convert_scalar2(scalar2(340, 149));
 
                 settings.bg.wheel_dimensions <- convert_scalar2(scalar2(450, 240));
                 settings.bg.wheel_pos <- scalar2(settings.sidebar.panel_dimensions.w + (((convert_width(settings.base_dimensions.w) - settings.sidebar.panel_dimensions.w) / 2) - (settings.bg.wheel_dimensions.w / 2)), convert_height(250));
@@ -314,7 +324,7 @@ class LayoutSettings
                 settings.bg.wheel_shadow_dimensions <- convert_scalar2(scalar2(1200, 1024));
                 settings.bg.wheel_shadow_pos <- scalar2(settings.sidebar.panel_dimensions.w + (((convert_width(settings.base_dimensions.w) - settings.sidebar.panel_dimensions.w) / 2) - (settings.bg.wheel_shadow_dimensions.w / 2)), -180);
 
-                settings.sidebar.numpanels <- (get_lowres_flag()) ? 7 : 9;
+                settings.sidebar.numpanels <- 9;
 
                 settings.infopanel.shadow_image <- null;
                 settings.infopanel.shadow_dimensions <- null;
@@ -339,190 +349,20 @@ class LayoutSettings
                 settings.infopanel.game_shadow_image <- "images/infopanel_game_bg_shadow_vert.png";
                 settings.infopanel.game_shadow_dimensions <- convert_scalar2(scalar2(520, 248));
                 settings.infopanel.game_shadow_pos <- scalar2(convert_width(settings.base_dimensions.w) - settings.infopanel.game_shadow_dimensions.w, 0);
+
+                settings.sidebar.panel_text_charsize <- convert_height(20);
+                settings.sidebar.panel_selected_text_charsize <- convert_height(22);
+                settings.infopanel.filter_text_charsize <- convert_height(22);
+                settings.infopanel.game_text_charsize <- convert_height(22);
                 break;
 
             case "5:4":
                 settings.base_dimensions <- scalar2(1350, 1080);
 
-                settings.bg.preserve_vert <- (get_lowres_flag() && get_user_config("scanline_strength") != "None") ? "fill" : "fit";
-                settings.bg.preserve_horiz <- "fill";
-
-                settings.sidebar.panel_dimensions <- (get_lowres_flag()) ? convert_scalar2(scalar2(380, 215)) : convert_scalar2(scalar2(360, 154));
-
-                settings.bg.wheel_dimensions <- convert_scalar2(scalar2(450, 240));
-                settings.bg.wheel_pos <- scalar2(convert_width(settings.base_dimensions.w) - (settings.bg.wheel_dimensions.w + convert_width(50)), convert_height(65));
-
-                settings.bg.wheel_shadow_image <- "images/wheel_shadow_horiz.png";
-                settings.bg.wheel_shadow_dimensions <- convert_scalar2(scalar2(1170, 630));
-                settings.bg.wheel_shadow_pos <- scalar2(convert_width(settings.base_dimensions.w) - settings.bg.wheel_shadow_dimensions.w, 0);
-
-                settings.sidebar.numpanels <- (get_lowres_flag()) ? 5 : 7;
-
-                settings.infopanel.shadow_image <- "images/infopanel_shadow.png";
-                settings.infopanel.shadow_dimensions <- convert_scalar2(scalar2(880, 248));
-                settings.infopanel.shadow_pos <- scalar2(convert_scalar2(settings.base_dimensions) - settings.infopanel.shadow_dimensions)
-
-                settings.infopanel.filter_image <- "images/infopanel_filter_bg.png";
-                settings.infopanel.filter_dimensions <- convert_scalar2(scalar2(740, 100));
-                settings.infopanel.filter_pos <- scalar2(convert_width(settings.base_dimensions.w) - settings.infopanel.filter_dimensions.w, convert_height(settings.base_dimensions.h) - settings.infopanel.filter_dimensions.h);
-                settings.infopanel.filter_text_dimensions <- convert_scalar2(scalar2(300, 60));
-                settings.infopanel.filter_text_pos <- scalar2(convert_width(settings.base_dimensions.w) - convert_width(680), convert_height(settings.base_dimensions.h) - settings.infopanel.filter_dimensions.h + ((settings.infopanel.filter_dimensions.h - settings.infopanel.filter_text_dimensions.h) / 2));
-
-                settings.infopanel.filter_shadow_image <- null;
-                settings.infopanel.filter_shadow_dimensions <- null;
-                settings.infopanel.filter_shadow_pos <- null;
-
-                settings.infopanel.game_image <- "images/infopanel_game_bg.png";
-                settings.infopanel.game_dimensions <- convert_scalar2(scalar2(380, 100));
-                settings.infopanel.game_pos <- scalar2(convert_width(settings.base_dimensions.w) - settings.infopanel.game_dimensions.w, convert_height(settings.base_dimensions.h) - settings.infopanel.game_dimensions.h);
-                settings.infopanel.game_text_dimensions <- convert_scalar2(scalar2(280, 60));
-                settings.infopanel.game_text_pos <- scalar2(convert_width(settings.base_dimensions.w) - convert_width(310), convert_height(settings.base_dimensions.h) - settings.infopanel.game_dimensions.h + ((settings.infopanel.game_dimensions.h - settings.infopanel.game_text_dimensions.h) / 2));
-
-                settings.infopanel.game_shadow_image <- null;
-                settings.infopanel.game_shadow_dimensions <- null;
-                settings.infopanel.game_shadow_pos <- null;
-                break;
-
-            case "3:5":
-            case "5:8":
-            case "10:16":
-                settings.base_dimensions <- scalar2(1200, 1920);
-
-                settings.bg.preserve_vert <- "fill";
-                settings.bg.preserve_horiz <- "fill";
-
-                settings.sidebar.panel_dimensions <- (get_lowres_flag()) ? convert_scalar2(scalar2(380, 213)) : convert_scalar2(scalar2(320, 174));
-
-                settings.bg.wheel_dimensions <- convert_scalar2(scalar2(450, 240));
-                settings.bg.wheel_pos <- scalar2(settings.sidebar.panel_dimensions.w + (((convert_width(settings.base_dimensions.w) - settings.sidebar.panel_dimensions.w) / 2) - (settings.bg.wheel_dimensions.w / 2)), convert_height(250));
-
-                settings.bg.wheel_shadow_image <- "images/wheel_shadow_vert.png";
-                settings.bg.wheel_shadow_dimensions <- convert_scalar2(scalar2(1200, 1024));
-                settings.bg.wheel_shadow_pos <- scalar2(settings.sidebar.panel_dimensions.w + (((convert_width(settings.base_dimensions.w) - settings.sidebar.panel_dimensions.w) / 2) - (settings.bg.wheel_shadow_dimensions.w / 2)), -180);
-
-                settings.sidebar.numpanels <- (get_lowres_flag()) ? 9 : 11;
-
-                settings.infopanel.shadow_image <- "images/infopanel_shadow.png";
-                settings.infopanel.shadow_dimensions <- convert_scalar2(scalar2(880, 248));
-                settings.infopanel.shadow_pos <- scalar2(convert_scalar2(settings.base_dimensions) - settings.infopanel.shadow_dimensions)
-
-                settings.infopanel.filter_image <- "images/infopanel_filter_bg.png";
-                settings.infopanel.filter_dimensions <- convert_scalar2(scalar2(740, 100));
-                settings.infopanel.filter_pos <- scalar2(convert_width(settings.base_dimensions.w) - settings.infopanel.filter_dimensions.w, convert_height(settings.base_dimensions.h) - settings.infopanel.filter_dimensions.h);
-                settings.infopanel.filter_text_dimensions <- convert_scalar2(scalar2(300, 60));
-                settings.infopanel.filter_text_pos <- scalar2(convert_width(settings.base_dimensions.w) - convert_width(680), convert_height(settings.base_dimensions.h) - settings.infopanel.filter_dimensions.h + ((settings.infopanel.filter_dimensions.h - settings.infopanel.filter_text_dimensions.h) / 2));
-
-                settings.infopanel.filter_shadow_image <- null;
-                settings.infopanel.filter_shadow_dimensions <- null;
-                settings.infopanel.filter_shadow_pos <- null;
-
-                settings.infopanel.game_image <- "images/infopanel_game_bg.png";
-                settings.infopanel.game_dimensions <- convert_scalar2(scalar2(380, 100));
-                settings.infopanel.game_pos <- scalar2(convert_width(settings.base_dimensions.w) - settings.infopanel.game_dimensions.w, convert_height(settings.base_dimensions.h) - settings.infopanel.game_dimensions.h);
-                settings.infopanel.game_text_dimensions <- convert_scalar2(scalar2(280, 60));
-                settings.infopanel.game_text_pos <- scalar2(convert_width(settings.base_dimensions.w) - convert_width(310), convert_height(settings.base_dimensions.h) - settings.infopanel.game_dimensions.h + ((settings.infopanel.game_dimensions.h - settings.infopanel.game_text_dimensions.h) / 2));
-
-                settings.infopanel.game_shadow_image <- null;
-                settings.infopanel.game_shadow_dimensions <- null;
-                settings.infopanel.game_shadow_pos <- null;
-                break;
-
-            case "5:3":
-            case "8:5":
-            case "16:10":
-                settings.base_dimensions <- scalar2(1920, 1200);
-
                 settings.bg.preserve_vert <- "fit";
                 settings.bg.preserve_horiz <- "fill";
 
-                settings.sidebar.panel_dimensions <- (get_lowres_flag()) ? convert_scalar2(scalar2(370, 239)) : convert_scalar2(scalar2(320, 171));
-
-                settings.bg.wheel_dimensions <- convert_scalar2(scalar2(450, 240));
-                settings.bg.wheel_pos <- scalar2(convert_width(settings.base_dimensions.w) - (settings.bg.wheel_dimensions.w + convert_width(50)), convert_height(65));
-
-                settings.bg.wheel_shadow_image <- "images/wheel_shadow_horiz.png";
-                settings.bg.wheel_shadow_dimensions <- convert_scalar2(scalar2(1170, 630));
-                settings.bg.wheel_shadow_pos <- scalar2(convert_width(settings.base_dimensions.w) - settings.bg.wheel_shadow_dimensions.w, 0);
-
-                settings.sidebar.numpanels <- (get_lowres_flag()) ? 5 : 7;
-
-                settings.infopanel.shadow_image <- "images/infopanel_shadow.png";
-                settings.infopanel.shadow_dimensions <- convert_scalar2(scalar2(880, 248));
-                settings.infopanel.shadow_pos <- scalar2(convert_scalar2(settings.base_dimensions) - settings.infopanel.shadow_dimensions)
-
-                settings.infopanel.filter_image <- "images/infopanel_filter_bg.png";
-                settings.infopanel.filter_dimensions <- convert_scalar2(scalar2(740, 100));
-                settings.infopanel.filter_pos <- scalar2(convert_width(settings.base_dimensions.w) - settings.infopanel.filter_dimensions.w, convert_height(settings.base_dimensions.h) - settings.infopanel.filter_dimensions.h);
-                settings.infopanel.filter_text_dimensions <- convert_scalar2(scalar2(300, 60));
-                settings.infopanel.filter_text_pos <- scalar2(convert_width(settings.base_dimensions.w) - convert_width(680), convert_height(settings.base_dimensions.h) - settings.infopanel.filter_dimensions.h + ((settings.infopanel.filter_dimensions.h - settings.infopanel.filter_text_dimensions.h) / 2));
-
-                settings.infopanel.filter_shadow_image <- null;
-                settings.infopanel.filter_shadow_dimensions <- null;
-                settings.infopanel.filter_shadow_pos <- null;
-
-                settings.infopanel.game_image <- "images/infopanel_game_bg.png";
-                settings.infopanel.game_dimensions <- convert_scalar2(scalar2(380, 100));
-                settings.infopanel.game_pos <- scalar2(convert_width(settings.base_dimensions.w) - settings.infopanel.game_dimensions.w, convert_height(settings.base_dimensions.h) - settings.infopanel.game_dimensions.h);
-                settings.infopanel.game_text_dimensions <- convert_scalar2(scalar2(280, 60));
-                settings.infopanel.game_text_pos <- scalar2(convert_width(settings.base_dimensions.w) - convert_width(310), convert_height(settings.base_dimensions.h) - settings.infopanel.game_dimensions.h + ((settings.infopanel.game_dimensions.h - settings.infopanel.game_text_dimensions.h) / 2));
-
-                settings.infopanel.game_shadow_image <- null;
-                settings.infopanel.game_shadow_dimensions <- null;
-                settings.infopanel.game_shadow_pos <- null;
-                break;
-
-            case "384:683":
-            case "9:16":
-                settings.base_dimensions <- scalar2(1080, 1920);
-
-                settings.bg.preserve_vert <- "fill";
-                settings.bg.preserve_horiz <- "fill";
-
-                settings.sidebar.panel_dimensions <- convert_scalar2(scalar2(320, 174));
-
-                settings.bg.wheel_dimensions <- convert_scalar2(scalar2(450, 240));
-                settings.bg.wheel_pos <- scalar2(settings.sidebar.panel_dimensions.w + (((convert_width(settings.base_dimensions.w) - settings.sidebar.panel_dimensions.w) / 2) - (settings.bg.wheel_dimensions.w / 2)), convert_height(250));
-
-                settings.bg.wheel_shadow_image <- "images/wheel_shadow_vert.png";
-                settings.bg.wheel_shadow_dimensions <- convert_scalar2(scalar2(1200, 1024));
-                settings.bg.wheel_shadow_pos <- scalar2(settings.sidebar.panel_dimensions.w + (((convert_width(settings.base_dimensions.w) - settings.sidebar.panel_dimensions.w) / 2) - (settings.bg.wheel_shadow_dimensions.w / 2)), -180);
-
-                settings.sidebar.numpanels <- 11;
-
-                settings.infopanel.shadow_image <- null;
-                settings.infopanel.shadow_dimensions <- null;
-                settings.infopanel.shadow_pos <- null;
-
-                settings.infopanel.filter_image <- "images/infopanel_filter_bg_vert.png";
-                settings.infopanel.filter_dimensions <- convert_scalar2(scalar2(380, 100));
-                settings.infopanel.filter_pos <- scalar2(convert_width(settings.base_dimensions.w) - settings.infopanel.filter_dimensions.w, convert_height(settings.base_dimensions.h) - settings.infopanel.filter_dimensions.h);
-                settings.infopanel.filter_text_dimensions <- convert_scalar2(scalar2(280, 60));
-                settings.infopanel.filter_text_pos <- scalar2(convert_width(settings.base_dimensions.w) - settings.infopanel.filter_text_dimensions.w - convert_width(30), convert_height(settings.base_dimensions.h) - settings.infopanel.filter_dimensions.h + ((settings.infopanel.filter_dimensions.h - settings.infopanel.filter_text_dimensions.h) / 2));
-
-                settings.infopanel.filter_shadow_image <- "images/infopanel_filter_bg_shadow_vert.png";
-                settings.infopanel.filter_shadow_dimensions <- convert_scalar2(scalar2(520, 248));
-                settings.infopanel.filter_shadow_pos <- scalar2(convert_width(settings.base_dimensions.w) - settings.infopanel.filter_shadow_dimensions.w, convert_height(settings.base_dimensions.h) - settings.infopanel.filter_shadow_dimensions.h);
-
-                settings.infopanel.game_image <- "images/infopanel_game_bg_vert.png";
-                settings.infopanel.game_dimensions <- convert_scalar2(scalar2(380, 100));
-                settings.infopanel.game_pos <- scalar2(convert_width(settings.base_dimensions.w) - settings.infopanel.game_dimensions.w, 0);
-                settings.infopanel.game_text_dimensions <- convert_scalar2(scalar2(280, 60));
-                settings.infopanel.game_text_pos <- scalar2(convert_width(settings.base_dimensions.w) - settings.infopanel.game_text_dimensions.w - convert_width(30), (settings.infopanel.game_dimensions.h - settings.infopanel.game_text_dimensions.h) / 2);
-
-                settings.infopanel.game_shadow_image <- "images/infopanel_game_bg_shadow_vert.png";
-                settings.infopanel.game_shadow_dimensions <- convert_scalar2(scalar2(520, 248));
-                settings.infopanel.game_shadow_pos <- scalar2(convert_width(settings.base_dimensions.w) - settings.infopanel.game_shadow_dimensions.w, 0);
-                break;
-
-            case "683:384":
-            case "16:9":
-            default:
-                settings.base_dimensions <- scalar2(1920, 1080);
-
-                settings.bg.preserve_vert <- "fit";
-                settings.bg.preserve_horiz <- "fill";
-
-                settings.sidebar.panel_dimensions <- convert_scalar2(scalar2(360, 154));
+                settings.sidebar.panel_dimensions <- convert_scalar2(scalar2(380, 154));
 
                 settings.bg.wheel_dimensions <- convert_scalar2(scalar2(450, 240));
                 settings.bg.wheel_pos <- scalar2(convert_width(settings.base_dimensions.w) - (settings.bg.wheel_dimensions.w + convert_width(50)), convert_height(65));
@@ -556,6 +396,208 @@ class LayoutSettings
                 settings.infopanel.game_shadow_image <- null;
                 settings.infopanel.game_shadow_dimensions <- null;
                 settings.infopanel.game_shadow_pos <- null;
+
+                settings.sidebar.panel_text_charsize <- convert_height(20);
+                settings.sidebar.panel_selected_text_charsize <- convert_height(22);
+                settings.infopanel.filter_text_charsize <- convert_height(22);
+                settings.infopanel.game_text_charsize <- convert_height(22);
+                break;
+
+            case "3:5":
+            case "5:8":
+            case "10:16":
+                settings.base_dimensions <- scalar2(1200, 1920);
+
+                settings.bg.preserve_vert <- "fill";
+                settings.bg.preserve_horiz <- "fill";
+
+                settings.sidebar.panel_dimensions <- (get_lowres_flag()) ? convert_scalar2(scalar2(385, 213)) : convert_scalar2(scalar2(330, 174));
+
+                settings.bg.wheel_dimensions <- convert_scalar2(scalar2(450, 240));
+                settings.bg.wheel_pos <- scalar2(settings.sidebar.panel_dimensions.w + (((convert_width(settings.base_dimensions.w) - settings.sidebar.panel_dimensions.w) / 2) - (settings.bg.wheel_dimensions.w / 2)), convert_height(250));
+
+                settings.bg.wheel_shadow_image <- "images/wheel_shadow_vert.png";
+                settings.bg.wheel_shadow_dimensions <- convert_scalar2(scalar2(1200, 1024));
+                settings.bg.wheel_shadow_pos <- scalar2(settings.sidebar.panel_dimensions.w + (((convert_width(settings.base_dimensions.w) - settings.sidebar.panel_dimensions.w) / 2) - (settings.bg.wheel_shadow_dimensions.w / 2)), -180);
+
+                settings.sidebar.numpanels <- (get_lowres_flag()) ? 9 : 11;
+
+                settings.infopanel.shadow_image <- "images/infopanel_shadow.png";
+                settings.infopanel.shadow_dimensions <- convert_scalar2(scalar2(880, 248));
+                settings.infopanel.shadow_pos <- scalar2(convert_scalar2(settings.base_dimensions) - settings.infopanel.shadow_dimensions)
+
+                settings.infopanel.filter_image <- "images/infopanel_filter_bg.png";
+                settings.infopanel.filter_dimensions <- convert_scalar2(scalar2(740, 100));
+                settings.infopanel.filter_pos <- scalar2(convert_width(settings.base_dimensions.w) - settings.infopanel.filter_dimensions.w, convert_height(settings.base_dimensions.h) - settings.infopanel.filter_dimensions.h);
+                settings.infopanel.filter_text_dimensions <- convert_scalar2(scalar2(300, 60));
+                settings.infopanel.filter_text_pos <- scalar2(convert_width(settings.base_dimensions.w) - convert_width(680), convert_height(settings.base_dimensions.h) - settings.infopanel.filter_dimensions.h + ((settings.infopanel.filter_dimensions.h - settings.infopanel.filter_text_dimensions.h) / 2));
+
+                settings.infopanel.filter_shadow_image <- null;
+                settings.infopanel.filter_shadow_dimensions <- null;
+                settings.infopanel.filter_shadow_pos <- null;
+
+                settings.infopanel.game_image <- "images/infopanel_game_bg.png";
+                settings.infopanel.game_dimensions <- convert_scalar2(scalar2(380, 100));
+                settings.infopanel.game_pos <- scalar2(convert_width(settings.base_dimensions.w) - settings.infopanel.game_dimensions.w, convert_height(settings.base_dimensions.h) - settings.infopanel.game_dimensions.h);
+                settings.infopanel.game_text_dimensions <- convert_scalar2(scalar2(280, 60));
+                settings.infopanel.game_text_pos <- scalar2(convert_width(settings.base_dimensions.w) - convert_width(310), convert_height(settings.base_dimensions.h) - settings.infopanel.game_dimensions.h + ((settings.infopanel.game_dimensions.h - settings.infopanel.game_text_dimensions.h) / 2));
+
+                settings.infopanel.game_shadow_image <- null;
+                settings.infopanel.game_shadow_dimensions <- null;
+                settings.infopanel.game_shadow_pos <- null;
+
+                settings.sidebar.panel_text_charsize <- (get_lowres_flag()) ? convert_height(26) : convert_height(20);
+                settings.sidebar.panel_selected_text_charsize <-  (get_lowres_flag()) ? convert_height(26) : convert_height(22);
+                settings.infopanel.filter_text_charsize <- (get_lowres_flag()) ? convert_height(26) : convert_height(22);
+                settings.infopanel.game_text_charsize <- (get_lowres_flag()) ? convert_height(26) : convert_height(22);
+                break;
+
+            case "5:3":
+            case "8:5":
+            case "16:10":
+                settings.base_dimensions <- scalar2(1920, 1200);
+
+                settings.bg.preserve_vert <- "fit";
+                settings.bg.preserve_horiz <- "fill";
+
+                settings.sidebar.panel_dimensions <- (get_lowres_flag()) ? convert_scalar2(scalar2(380, 239)) : convert_scalar2(scalar2(320, 171));
+
+                settings.bg.wheel_dimensions <- convert_scalar2(scalar2(450, 240));
+                settings.bg.wheel_pos <- scalar2(convert_width(settings.base_dimensions.w) - (settings.bg.wheel_dimensions.w + convert_width(50)), convert_height(65));
+
+                settings.bg.wheel_shadow_image <- "images/wheel_shadow_horiz.png";
+                settings.bg.wheel_shadow_dimensions <- convert_scalar2(scalar2(1170, 630));
+                settings.bg.wheel_shadow_pos <- scalar2(convert_width(settings.base_dimensions.w) - settings.bg.wheel_shadow_dimensions.w, 0);
+
+                settings.sidebar.numpanels <- (get_lowres_flag()) ? 5 : 7;
+
+                settings.infopanel.shadow_image <- "images/infopanel_shadow.png";
+                settings.infopanel.shadow_dimensions <- convert_scalar2(scalar2(880, 248));
+                settings.infopanel.shadow_pos <- scalar2(convert_scalar2(settings.base_dimensions) - settings.infopanel.shadow_dimensions)
+
+                settings.infopanel.filter_image <- "images/infopanel_filter_bg.png";
+                settings.infopanel.filter_dimensions <- convert_scalar2(scalar2(740, 100));
+                settings.infopanel.filter_pos <- scalar2(convert_width(settings.base_dimensions.w) - settings.infopanel.filter_dimensions.w, convert_height(settings.base_dimensions.h) - settings.infopanel.filter_dimensions.h);
+                settings.infopanel.filter_text_dimensions <- convert_scalar2(scalar2(300, 60));
+                settings.infopanel.filter_text_pos <- scalar2(convert_width(settings.base_dimensions.w) - convert_width(680), convert_height(settings.base_dimensions.h) - settings.infopanel.filter_dimensions.h + ((settings.infopanel.filter_dimensions.h - settings.infopanel.filter_text_dimensions.h) / 2));
+
+                settings.infopanel.filter_shadow_image <- null;
+                settings.infopanel.filter_shadow_dimensions <- null;
+                settings.infopanel.filter_shadow_pos <- null;
+
+                settings.infopanel.game_image <- "images/infopanel_game_bg.png";
+                settings.infopanel.game_dimensions <- convert_scalar2(scalar2(380, 100));
+                settings.infopanel.game_pos <- scalar2(convert_width(settings.base_dimensions.w) - settings.infopanel.game_dimensions.w, convert_height(settings.base_dimensions.h) - settings.infopanel.game_dimensions.h);
+                settings.infopanel.game_text_dimensions <- convert_scalar2(scalar2(280, 60));
+                settings.infopanel.game_text_pos <- scalar2(convert_width(settings.base_dimensions.w) - convert_width(310), convert_height(settings.base_dimensions.h) - settings.infopanel.game_dimensions.h + ((settings.infopanel.game_dimensions.h - settings.infopanel.game_text_dimensions.h) / 2));
+
+                settings.infopanel.game_shadow_image <- null;
+                settings.infopanel.game_shadow_dimensions <- null;
+                settings.infopanel.game_shadow_pos <- null;
+
+                settings.sidebar.panel_text_charsize <- (get_lowres_flag()) ? convert_height(27) : convert_height(20);
+                settings.sidebar.panel_selected_text_charsize <-  (get_lowres_flag()) ? convert_height(32) : convert_height(22);
+                settings.infopanel.filter_text_charsize <- (get_lowres_flag()) ? convert_height(27) : convert_height(22);
+                settings.infopanel.game_text_charsize <- (get_lowres_flag()) ? convert_height(27) : convert_height(22);
+                break;
+
+            case "384:683":
+            case "48:85":
+            case "9:16":
+                settings.base_dimensions <- scalar2(1080, 1920);
+
+                settings.bg.preserve_vert <- "fill";
+                settings.bg.preserve_horiz <- "fill";
+
+                settings.sidebar.panel_dimensions <- (get_lowres_flag()) ? convert_scalar2(scalar2(385, 213)) : convert_scalar2(scalar2(330, 174));
+
+                settings.bg.wheel_dimensions <- convert_scalar2(scalar2(450, 240));
+                settings.bg.wheel_pos <- scalar2(settings.sidebar.panel_dimensions.w + (((convert_width(settings.base_dimensions.w) - settings.sidebar.panel_dimensions.w) / 2) - (settings.bg.wheel_dimensions.w / 2)), convert_height(250));
+
+                settings.bg.wheel_shadow_image <- "images/wheel_shadow_vert.png";
+                settings.bg.wheel_shadow_dimensions <- convert_scalar2(scalar2(1200, 1024));
+                settings.bg.wheel_shadow_pos <- scalar2(settings.sidebar.panel_dimensions.w + (((convert_width(settings.base_dimensions.w) - settings.sidebar.panel_dimensions.w) / 2) - (settings.bg.wheel_shadow_dimensions.w / 2)), -180);
+
+                settings.sidebar.numpanels <- (get_lowres_flag()) ? 9 : 11;
+
+                settings.infopanel.shadow_image <- null;
+                settings.infopanel.shadow_dimensions <- null;
+                settings.infopanel.shadow_pos <- null;
+
+                settings.infopanel.filter_image <- "images/infopanel_filter_bg_vert.png";
+                settings.infopanel.filter_dimensions <- convert_scalar2(scalar2(380, 100));
+                settings.infopanel.filter_pos <- scalar2(convert_width(settings.base_dimensions.w) - settings.infopanel.filter_dimensions.w, convert_height(settings.base_dimensions.h) - settings.infopanel.filter_dimensions.h);
+                settings.infopanel.filter_text_dimensions <- convert_scalar2(scalar2(280, 60));
+                settings.infopanel.filter_text_pos <- scalar2(convert_width(settings.base_dimensions.w) - settings.infopanel.filter_text_dimensions.w - convert_width(30), convert_height(settings.base_dimensions.h) - settings.infopanel.filter_dimensions.h + ((settings.infopanel.filter_dimensions.h - settings.infopanel.filter_text_dimensions.h) / 2));
+
+                settings.infopanel.filter_shadow_image <- "images/infopanel_filter_bg_shadow_vert.png";
+                settings.infopanel.filter_shadow_dimensions <- convert_scalar2(scalar2(520, 248));
+                settings.infopanel.filter_shadow_pos <- scalar2(convert_width(settings.base_dimensions.w) - settings.infopanel.filter_shadow_dimensions.w, convert_height(settings.base_dimensions.h) - settings.infopanel.filter_shadow_dimensions.h);
+
+                settings.infopanel.game_image <- "images/infopanel_game_bg_vert.png";
+                settings.infopanel.game_dimensions <- convert_scalar2(scalar2(380, 100));
+                settings.infopanel.game_pos <- scalar2(convert_width(settings.base_dimensions.w) - settings.infopanel.game_dimensions.w, 0);
+                settings.infopanel.game_text_dimensions <- convert_scalar2(scalar2(280, 60));
+                settings.infopanel.game_text_pos <- scalar2(convert_width(settings.base_dimensions.w) - settings.infopanel.game_text_dimensions.w - convert_width(30), (settings.infopanel.game_dimensions.h - settings.infopanel.game_text_dimensions.h) / 2);
+
+                settings.infopanel.game_shadow_image <- "images/infopanel_game_bg_shadow_vert.png";
+                settings.infopanel.game_shadow_dimensions <- convert_scalar2(scalar2(520, 248));
+                settings.infopanel.game_shadow_pos <- scalar2(convert_width(settings.base_dimensions.w) - settings.infopanel.game_shadow_dimensions.w, 0);
+
+                settings.sidebar.panel_text_charsize <- (get_lowres_flag()) ? convert_height(23) : convert_height(20);
+                settings.sidebar.panel_selected_text_charsize <-  (get_lowres_flag()) ? convert_height(25) : convert_height(22);
+                settings.infopanel.filter_text_charsize <- (get_lowres_flag()) ? convert_height(25) : convert_height(22);
+                settings.infopanel.game_text_charsize <- (get_lowres_flag()) ? convert_height(25) : convert_height(22);
+                break;
+
+            case "683:384":
+            case "85:48":
+            case "16:9":
+            default:
+                settings.base_dimensions <- scalar2(1920, 1080);
+
+                settings.bg.preserve_vert <- "fit";
+                settings.bg.preserve_horiz <- "fill";
+
+                settings.sidebar.panel_dimensions <- (get_lowres_flag()) ? convert_scalar2(scalar2(385, 215)) : convert_scalar2(scalar2(380, 154));
+
+                settings.bg.wheel_dimensions <- convert_scalar2(scalar2(450, 240));
+                settings.bg.wheel_pos <- scalar2(convert_width(settings.base_dimensions.w) - (settings.bg.wheel_dimensions.w + convert_width(50)), convert_height(65));
+
+                settings.bg.wheel_shadow_image <- "images/wheel_shadow_horiz.png";
+                settings.bg.wheel_shadow_dimensions <- convert_scalar2(scalar2(1170, 630));
+                settings.bg.wheel_shadow_pos <- scalar2(convert_width(settings.base_dimensions.w) - settings.bg.wheel_shadow_dimensions.w, 0);
+
+                settings.sidebar.numpanels <- (get_lowres_flag()) ? 5 : 7;
+
+                settings.infopanel.shadow_image <- "images/infopanel_shadow.png";
+                settings.infopanel.shadow_dimensions <- convert_scalar2(scalar2(880, 248));
+                settings.infopanel.shadow_pos <- scalar2(convert_scalar2(settings.base_dimensions) - settings.infopanel.shadow_dimensions)
+
+                settings.infopanel.filter_image <- "images/infopanel_filter_bg.png";
+                settings.infopanel.filter_dimensions <- convert_scalar2(scalar2(740, 100));
+                settings.infopanel.filter_pos <- scalar2(convert_width(settings.base_dimensions.w) - settings.infopanel.filter_dimensions.w, convert_height(settings.base_dimensions.h) - settings.infopanel.filter_dimensions.h);
+                settings.infopanel.filter_text_dimensions <- convert_scalar2(scalar2(300, 60));
+                settings.infopanel.filter_text_pos <- scalar2(convert_width(settings.base_dimensions.w) - convert_width(680), convert_height(settings.base_dimensions.h) - settings.infopanel.filter_dimensions.h + ((settings.infopanel.filter_dimensions.h - settings.infopanel.filter_text_dimensions.h) / 2));
+
+                settings.infopanel.filter_shadow_image <- null;
+                settings.infopanel.filter_shadow_dimensions <- null;
+                settings.infopanel.filter_shadow_pos <- null;
+
+                settings.infopanel.game_image <- "images/infopanel_game_bg.png";
+                settings.infopanel.game_dimensions <- convert_scalar2(scalar2(380, 100));
+                settings.infopanel.game_pos <- scalar2(convert_width(settings.base_dimensions.w) - settings.infopanel.game_dimensions.w, convert_height(settings.base_dimensions.h) - settings.infopanel.game_dimensions.h);
+                settings.infopanel.game_text_dimensions <- convert_scalar2(scalar2(280, 60));
+                settings.infopanel.game_text_pos <- scalar2(convert_width(settings.base_dimensions.w) - convert_width(310), convert_height(settings.base_dimensions.h) - settings.infopanel.game_dimensions.h + ((settings.infopanel.game_dimensions.h - settings.infopanel.game_text_dimensions.h) / 2));
+
+                settings.infopanel.game_shadow_image <- null;
+                settings.infopanel.game_shadow_dimensions <- null;
+                settings.infopanel.game_shadow_pos <- null;
+
+                settings.sidebar.panel_text_charsize <- (get_lowres_flag()) ? convert_height(23) : convert_height(20);
+                settings.sidebar.panel_selected_text_charsize <-  (get_lowres_flag()) ? convert_height(25) : convert_height(22);
+                settings.infopanel.filter_text_charsize <- (get_lowres_flag()) ? convert_height(25) : convert_height(22);
+                settings.infopanel.game_text_charsize <- (get_lowres_flag()) ? convert_height(25) : convert_height(22);
                 break;
         }
         settings.bg.crt_shader <- get_user_config("crt_shader");
@@ -586,7 +628,8 @@ class LayoutSettings
         settings.sidebar.panel_separator_image <- "images/panel_bg_separator_1px.png"
         settings.sidebar.panel_separator_posx <- settings.sidebar.panel_posx;
         settings.sidebar.panel_separator_dimensions <- scalar2(settings.sidebar.panel_dimensions.w, 1);
-        settings.sidebar.panel_artwork_dimensions <- convert_scalar2(scalar2(130, 130));
+        settings.sidebar.panel_artwork_dimensions <- convert_scalar2(scalar2(130, 0));
+        settings.sidebar.panel_artwork_dimensions.y = settings.sidebar.panel_artwork_dimensions.x;
         settings.sidebar.panel_artwork_posx <- convert_width(18);
         settings.sidebar.panel_artwork_posy_offset <- round((settings.sidebar.panel_dimensions.h - settings.sidebar.panel_artwork_dimensions.h) / 2);
         settings.sidebar.panel_artwork_mask_image <- (get_lowres_flag()) ? "images/panel_artwork_mask_lowres.png" : "images/panel_artwork_mask.png";
@@ -598,7 +641,6 @@ class LayoutSettings
         settings.sidebar.panel_text_dimensions <- scalar2(settings.sidebar.panel_dimensions.w - settings.sidebar.panel_text_posx + convert_width(10), settings.sidebar.panel_dimensions.h - convert_height(16));
         settings.sidebar.panel_text_posy_offset <- (settings.sidebar.panel_dimensions.h - settings.sidebar.panel_text_dimensions.h) / 2;
         settings.sidebar.panel_text_width_offset <- convert_width(22);
-        settings.sidebar.panel_text_charsize <- (get_lowres_flag()) ? convert_height(24) : convert_height(20);
         settings.sidebar.panel_text_font <- "Lato-Medium.ttf";
         settings.sidebar.panel_text_align <- Align.Left;
         settings.sidebar.panel_text_word_wrap <- true;
@@ -610,7 +652,8 @@ class LayoutSettings
         settings.sidebar.panel_selected_arrow_posx <- settings.sidebar.panel_dimensions.w;
         settings.sidebar.panel_selected_arrow_dimensions <- scalar2((settings.sidebar.panel_selected_dimensions.h / 39) * 20, settings.sidebar.panel_selected_dimensions.h);
         settings.sidebar.panel_selected_artwork_posx <- convert_width(10);
-        settings.sidebar.panel_selected_artwork_dimensions <- convert_scalar2(scalar2(146, 146));
+        settings.sidebar.panel_selected_artwork_dimensions <- convert_scalar2(scalar2(146, 0));
+        settings.sidebar.panel_selected_artwork_dimensions.y = settings.sidebar.panel_selected_artwork_dimensions.x;
         settings.sidebar.panel_selected_artwork_posy_offset <- round((settings.sidebar.panel_selected_dimensions.h - settings.sidebar.panel_selected_artwork_dimensions.h) / 2);
         settings.sidebar.panel_selected_artwork_mask_image <- (get_lowres_flag()) ? "images/panel_selected_artwork_mask_lowres.png" : "images/panel_selected_artwork_mask.png";
         settings.sidebar.panel_selected_artwork_mask_favourite_image <- (get_lowres_flag()) ? "images/panel_selected_artwork_favourite_mask_lowres.png" : "images/panel_selected_artwork_favourite_mask.png";
@@ -621,7 +664,6 @@ class LayoutSettings
         settings.sidebar.panel_selected_text_dimensions <- scalar2(((settings.sidebar.panel_dimensions.w - settings.sidebar.panel_selected_text_posx) + settings.sidebar.panel_selected_arrow_dimensions.w) - convert_width(30), settings.sidebar.panel_selected_dimensions.h - convert_height(16));
         settings.sidebar.panel_selected_text_posy_offset <- (settings.sidebar.panel_selected_dimensions.h - settings.sidebar.panel_selected_text_dimensions.h) / 2;
         settings.sidebar.panel_selected_text_width_offset <- convert_width(23);
-        settings.sidebar.panel_selected_text_charsize <-  (get_lowres_flag()) ? convert_height(26) : convert_height(22);
         settings.sidebar.panel_selected_text_font <- "Lato-Black.ttf";
         settings.sidebar.panel_selected_text_align <- Align.Left;
         settings.sidebar.panel_selected_text_word_wrap <- true;
@@ -633,13 +675,11 @@ class LayoutSettings
         settings.infopanel.shadow_strength <- get_strength(get_user_config("shadow_strength"));
 
         settings.infopanel.filter_text_width_offset <- convert_width(50);
-        settings.infopanel.filter_text_charsize <- (get_lowres_flag()) ? convert_height(24) : convert_height(22);
         settings.infopanel.filter_text_font <- "Lato-Black.ttf";
         settings.infopanel.filter_text_align <- Align.Right;
         settings.infopanel.filter_text_word_wrap <- true;
 
         settings.infopanel.game_text_width_offset <- convert_width(50);
-        settings.infopanel.game_text_charsize <- (get_lowres_flag()) ? convert_height(24) : convert_height(22);
         settings.infopanel.game_text_font <- "Lato-Black.ttf";
         settings.infopanel.game_text_align <- Align.Right;
         settings.infopanel.game_text_word_wrap <- true;
