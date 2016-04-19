@@ -9,13 +9,13 @@ shader code by: Timothy Lottes, LUKE NUKEM, krischan, Chris Van Graas
 LayoutSettings class
 
 Public Methods:
-    rotate_layout()
+    initialize()
         Sets the layout rotation, aspect ratio, and dimensions based on the UserConfig layout_rotation value.
         Use this before drawing to set up the base settings for the layout.
 
     set_layout_dimensions(scalar2)
         Set the layout width and height, aspect ratio, and lowres flag.
-        Use this prior to calling rotate_layout() if you want to manually set the layout dimensions
+        Use this prior to calling initialize() if you want to manually set the layout dimensions
         (useful for testing various layout aspect ratios and dimensions during development).
 
     set_user_config(string, string|int|float|bool)
@@ -72,6 +72,22 @@ Public Methods:
     get_layout_aspect_ratio_name()
         get the value of the layout aspect ratio width and height as a string.
         returns string
+
+    init_layout_settings()
+        populate the layout.settings table with position and size variables for the current aspect ratio.
+        these variables are then used by the Background, SideBar, and InfoPanel classes.
+
+    function convert_scalar2(scalar2)
+        convert the x,y / h,w values of a scalar2 to scale up/down to suit the current video resolution.
+        returns scalar2()
+
+    function convert_width(int)
+        convert a width (or x) value to scale up/down to suit the current video resolution.
+        returns int
+
+    function convert_height(int)
+        convert a height (or y) value to scale up/down to suit the current video resolution.
+        returns int
 
 */
 
