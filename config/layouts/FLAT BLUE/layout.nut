@@ -54,7 +54,7 @@ fe.do_nut("scripts/infopanel.nut");
 fe.do_nut("scripts/overlaymenu.nut");
 
 const LAYOUT_NAME = "FLAT BLUE";
-const VERSION = 0.9994;
+const VERSION = 0.9995;
 const DEBUG = false;
 
 local layout = LayoutSettings();
@@ -103,6 +103,26 @@ function main()
     init_options_menu();
 }
 
-// layout.set_layout_dimensions(scalar2(1920,1080));
+local test_resolution = scalar2();
+
+// test_resolution = scalar2(1920, 1080);
+// test_resolution = scalar2(1366, 768);
+// test_resolution = scalar2(1360, 768);
+// test_resolution = scalar2(1024, 576);
+
+// test_resolution = scalar2(1920, 1200);
+// test_resolution = scalar2(1280, 768);
+// test_resolution = scalar2(800, 480);
+
+// test_resolution = scalar2(1600, 1280);
+// test_resolution = scalar2(1280, 1024);
+
+// test_resolution = scalar2(1600, 1200);
+// test_resolution = scalar2(1024, 768);
+// test_resolution = scalar2(800, 600);
+// test_resolution = scalar2(640, 480);
+// test_resolution = scalar2(320, 240);
+
+// layout.set_layout_dimensions(test_resolution);
 
 main()
