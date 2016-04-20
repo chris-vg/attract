@@ -10,6 +10,9 @@ shader code by: Timothy Lottes, LUKE NUKEM, krischan, Chris Van Graas
 
 class UserConfig </ help="FLAT BLUE - Aspect and rotation aware layout for Attract-Mode Front-End." />
 {
+    </ label="Layout rotation", help="Set the rotation of the layout to suit your monitor.  Default is None.", options="None, Right, Flip, Left", order=1 />
+    layout_rotation = "None";
+
     </ label="Menu artwork", help="Set menu panel artwork type.  Default is Snap.\nNOTE: Configure artwork types in emulator settings.", options="Snap, Title", order=2 />
     menu_art_type = "Snap";
 
@@ -51,7 +54,7 @@ fe.do_nut("scripts/infopanel.nut");
 fe.do_nut("scripts/overlaymenu.nut");
 
 const LAYOUT_NAME = "FLAT BLUE";
-const VERSION = 0.9996;
+const VERSION = 0.9995;
 const DEBUG = false;
 
 local layout = LayoutSettings();
@@ -83,20 +86,21 @@ function init_options_menu()
     options = OverlayMenu(options_items, options_actions, options_button, options_label);
 }
 
-fe.add_transition_callback("main");
-
-function main(ttype, var, ttime)
+function main()
 {
-    if (ttype == Transition.StartLayout)
-    {
-	    layout.initialize();
+    layout.initialize();
 
-	    Background(layout.settings);
-	    SideBar(layout.settings);
-	    InfoPanel(layout.settings);
+    log(format("layout width:    %d", layout.get_layout_width()));
+    log(format("layout height:   %d", layout.get_layout_height()));
+    log(format("aspect ratio:    %d:%d (%f:1)", layout.get_layout_aspect_ratio_width(), layout.get_layout_aspect_ratio_height(), layout.get_layout_aspect_ratio_float()));
+    log(format("layout rotation: %s", layout.get_layout_rotation_name()));
+    log(format("lowres:          %s", layout.get_lowres_flag().tostring()));
 
-	    init_options_menu();
-	}
+    Background(layout.settings);
+    SideBar(layout.settings);
+    InfoPanel(layout.settings);
+
+    init_options_menu();
 }
 
 local test_resolution = scalar2();
@@ -119,4 +123,6 @@ local test_resolution = scalar2();
 // test_resolution = scalar2(640, 480);
 // test_resolution = scalar2(320, 240);
 
-layout.set_layout_dimensions(test_resolution);
+// layout.set_layout_dimensions(test_resolution);
+
+main()

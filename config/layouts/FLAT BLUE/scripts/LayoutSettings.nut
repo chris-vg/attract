@@ -95,6 +95,7 @@ class LayoutSettings
 {
     _user_config = null;
     _lowres = null;
+    _rotation = null;
     _layout_dimensions = null;
     _aspect_ratio_float = null;
     _aspect_ratio_gcd = null;
@@ -134,7 +135,7 @@ class LayoutSettings
 
     function get_lowres_flag() { return _lowres; }
 
-    function get_layout_rotation() { return fe.layout.base_rotation; }
+    function get_layout_rotation() { return _rotation; }
     function get_layout_rotation_name()
     {
         local name = "";
@@ -181,6 +182,23 @@ class LayoutSettings
 
     function set_layout_rotation()
     {
+        switch (get_user_config("layout_rotation"))
+        {
+            case "None":
+                _rotation = RotateScreen.None;
+                break;
+            case "Right":
+                _rotation = RotateScreen.Right;
+                break;
+            case "Flip":
+                _rotation = RotateScreen.Flip;
+                break;
+            case "Left":
+                _rotation = RotateScreen.Left;
+                break;
+        }
+        fe.layout.base_rotation = get_layout_rotation();
+
         local dimensions = scalar2();
         switch (get_layout_rotation())
         {
@@ -203,12 +221,6 @@ class LayoutSettings
     {
         set_layout_rotation();
         init_layout_settings();
-
-        log(format("layout width:    %d", get_layout_width()));
-        log(format("layout height:   %d", get_layout_height()));
-        log(format("aspect ratio:    %d:%d (%f:1)", get_layout_aspect_ratio_width(), get_layout_aspect_ratio_height(), get_layout_aspect_ratio_float()));
-        log(format("layout rotation: %s", get_layout_rotation_name()));
-        log(format("lowres:          %s", get_lowres_flag().tostring()));
     }
 
     function init_layout_settings()
