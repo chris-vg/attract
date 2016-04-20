@@ -101,7 +101,7 @@ function main(ttype, var, ttime)
 
 local test_resolution = scalar2();
 
-test_resolution = scalar2(1920, 1080);
+// test_resolution = scalar2(1920, 1080);
 // test_resolution = scalar2(1366, 768);
 // test_resolution = scalar2(1360, 768);
 // test_resolution = scalar2(1024, 576);
