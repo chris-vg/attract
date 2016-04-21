@@ -111,11 +111,12 @@ class Panel
         fe.add_image(settings.panel_image, settings.panel_posx, posy, settings.panel_dimensions.w, settings.panel_dimensions.h);
         fe.add_image(settings.panel_separator_image, settings.panel_separator_posx, posy, settings.panel_separator_dimensions.w, settings.panel_separator_dimensions.h);
 
-        local art_flag = (settings.menu_video == "Enabled") ? Art.Default : Art.ImagesOnly;
-        local art_image = fe.get_art(settings.menu_art_type.tolower(), idx - settings.panel_selected_index, 0, art_flag);
-        if (art_image == "") art_image = "images/static.mp4";
+        // local art_flag = (settings.menu_video == "Enabled") ? Art.Default : Art.ImagesOnly;
+        // local art_image = fe.get_art(settings.menu_art_type.tolower(), idx - settings.panel_selected_index, 0, art_flag);
+        // if (art_image == "") art_image = "images/static.mp4";
 
-        artwork = PreserveImage(art_image, settings.panel_artwork_posx, posy + settings.panel_artwork_posy_offset, settings.panel_artwork_dimensions.w, settings.panel_artwork_dimensions.h);
+        // artwork = PreserveImage(art_image, settings.panel_artwork_posx, posy + settings.panel_artwork_posy_offset, settings.panel_artwork_dimensions.w, settings.panel_artwork_dimensions.h);
+        artwork = PreserveArt(settings.menu_art_type.tolower(), settings.panel_artwork_posx, posy + settings.panel_artwork_posy_offset, settings.panel_artwork_dimensions.w, settings.panel_artwork_dimensions.h);
         artwork.art.video_flags = (settings.menu_video == "Enabled") ? Vid.NoAudio : Vid.ImagesOnly;
         artwork.set_fit_or_fill("fill");
         artwork.index_offset = idx - settings.panel_selected_index;
@@ -133,10 +134,13 @@ class Panel
 
     function update_panel(idx)
     {
-        local art_flag = (settings.menu_video == "Enabled") ? Art.Default : Art.ImagesOnly;
-        local art_image = fe.get_art(settings.menu_art_type.tolower(), idx - settings.panel_selected_index, 0, art_flag);
-        if (art_image == "") art_image = "images/static.mp4";
-        artwork.art.file_name = art_image;
+        // local art_flag = (settings.menu_video == "Enabled") ? Art.Default : Art.ImagesOnly;
+        // local art_image = fe.get_art(settings.menu_art_type.tolower(), idx - settings.panel_selected_index, 0, art_flag);
+        // local art_image = fe.get_art(settings.menu_art_type.tolower(), idx - settings.panel_selected_index, 0);
+        // log(idx + ": " + art_image)
+        // if (art_image == "") art_image = "images/static.mp4";
+        // artwork.art.file_name = art_image;
+        if (artwork.art.file_name == "") artwork.art.file_name = "images/static.mp4";
 
         local mask = (fe.game_info(Info.Favourite, idx - settings.panel_selected_index) == "1") ? settings.panel_artwork_mask_favourite_image : settings.panel_artwork_mask_image;
         artwork_mask.file_name = mask;
@@ -149,11 +153,12 @@ class Panel
 
         fe.add_image(settings.panel_selected_image, settings.panel_selected_posx, posy, settings.panel_selected_dimensions.w, settings.panel_selected_dimensions.h);
 
-        local art_flag = (settings.menu_video == "Enabled") ? Art.Default : Art.ImagesOnly;
-        local art_image = fe.get_art(settings.menu_art_type.tolower(), 0, 0, art_flag);
-        if (art_image == "") art_image = "images/static.mp4";
+        // local art_flag = (settings.menu_video == "Enabled") ? Art.Default : Art.ImagesOnly;
+        // local art_image = fe.get_art(settings.menu_art_type.tolower(), 0, 0, art_flag);
+        // if (art_image == "") art_image = "images/static.mp4";
 
-        artwork = PreserveImage(art_image, settings.panel_selected_artwork_posx, posy + settings.panel_selected_artwork_posy_offset, settings.panel_selected_artwork_dimensions.w, settings.panel_selected_artwork_dimensions.h);
+        // artwork = PreserveImage(art_image, settings.panel_selected_artwork_posx, posy + settings.panel_selected_artwork_posy_offset, settings.panel_selected_artwork_dimensions.w, settings.panel_selected_artwork_dimensions.h);
+        artwork = PreserveArt(settings.menu_art_type.tolower(), settings.panel_selected_artwork_posx, posy + settings.panel_selected_artwork_posy_offset, settings.panel_selected_artwork_dimensions.w, settings.panel_selected_artwork_dimensions.h);
         artwork.art.video_flags = (settings.menu_video == "Enabled") ? Vid.NoAudio : Vid.ImagesOnly;
         artwork.set_fit_or_fill("fill");
 
@@ -171,10 +176,11 @@ class Panel
 
     function update_selected(idx)
     {
-        local art_flag = (settings.menu_video == "Enabled") ? Art.Default : Art.ImagesOnly;
-        local art_image = fe.get_art(settings.menu_art_type.tolower(), 0, 0, art_flag);
-        if (art_image == "") art_image = "images/static.mp4";
-        artwork.art.file_name = art_image;
+        // local art_flag = (settings.menu_video == "Enabled") ? Art.Default : Art.ImagesOnly;
+        // local art_image = fe.get_art(settings.menu_art_type.tolower(), 0, 0, art_flag);
+        // if (art_image == "") art_image = "images/static.mp4";
+        // artwork.art.file_name = art_image;
+        if (artwork.art.file_name == "") artwork.art.file_name = "images/static.mp4";
 
         local mask = (fe.game_info(Info.Favourite) == "1") ? settings.panel_selected_artwork_mask_favourite_image : settings.panel_selected_artwork_mask_image;
         artwork_mask.file_name = mask;

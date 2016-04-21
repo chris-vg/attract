@@ -123,7 +123,8 @@ class Background
         {
             if (settings.show_wheel == "Enabled")
             {
-                local wheel_image = (fe.get_art("wheel") == "") ? "images/systems/" + fe.game_info(Info.System) + ".png" : fe.get_art("wheel")
+                local wheel_system = (fe.game_info(Info.System) == "") ? "Arcade" : fe.game_info(Info.System);
+                local wheel_image = (fe.get_art("wheel") == "") ? "images/systems/" + wheel_system + ".png" : fe.get_art("wheel")
                 wheel_dropshadow.file_name = wheel_image;
                 wheel_art.file_name = wheel_image;
             }
