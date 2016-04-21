@@ -26,7 +26,6 @@ class Background
     wheel_art = null;
     shader_crt = null;
     shader_bloom = null;
-    // shader_wheel_text = null;
 
     constructor(layout_settings)
     {
@@ -79,12 +78,6 @@ class Background
         {
             settings.crt_shader = "Disabled";
         }
-
-        // if (ShadersAvailable)
-        // {
-        //     shader_wheel_text = fe.add_shader(Shader.VertexAndFragment, "shaders/gradient.vsh", "shaders/gradient.fsh");
-        //     shader_wheel_text.set_texture_param("u_texture");
-        // }
     }
 
     function draw()
@@ -109,7 +102,7 @@ class Background
             bgart = bgart_surface.add_artwork("snap", 0, 0, settings.dimensions.w, settings.dimensions.h);
         }
 
-        if (settings.show_wheel == "Yes")
+        if (settings.show_wheel == "Enabled")
         {
             wheel_shadow = fe.add_image(settings.wheel_shadow_image, settings.wheel_shadow_pos.x, settings.wheel_shadow_pos.y, settings.wheel_shadow_dimensions.w, settings.wheel_shadow_dimensions.h);
             wheel_shadow.alpha = 255;
@@ -128,7 +121,7 @@ class Background
     {
         if (ttype == Transition.ToNewList || ttype == Transition.FromOldSelection)
         {
-            if (settings.show_wheel == "Yes")
+            if (settings.show_wheel == "Enabled")
             {
                 local wheel_image = (fe.get_art("wheel") == "") ? "images/systems/" + fe.game_info(Info.System) + ".png" : fe.get_art("wheel")
                 wheel_dropshadow.file_name = wheel_image;

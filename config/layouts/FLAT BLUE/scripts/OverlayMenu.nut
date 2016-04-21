@@ -20,30 +20,50 @@ OverlayMenu class
 
 class OverlayMenu
 {
-    _items = [];
-    _actions = [];
-    _button = "";
-    _label = "";
+    items = null;
+    actions = null;
+    button = null;
+    label = null;
+    historyviewer = null;
+    mameinfoviewer = null;
+    settings = null;
 
-    constructor(items, actions, button, label)
+    constructor(layout_settings)
     {
-        _items = items;
-        _actions = actions;
-        _button = button;
-        _label = label;
+        settings = layout_settings.overlaymenu;
+
+        items = settings.options_items;
+        actions = settings.options_actions;
+        button = settings.button;
+        label = settings.label;
+
+        historyviewer = HistoryViewer(layout_settings);
+        mameinfoviewer = MAMEInfoViewer(layout_settings);
 
         fe.add_ticks_callback(this, "OnTick");
     }
 
     function OnTick( ttime )
     {
-        if (fe.get_input_state(_button))
+        if (fe.get_input_state(button))
         {
-            local selected = fe.overlay.list_dialog(_items, _label);
-            if ((selected < 0) || (selected >= _actions.len()) || (_actions[selected].len() < 1))
+            local selected = fe.overlay.list_dialog(items, label);
+            if ((selected < 0) || (selected >= actions.len()) || (actions[selected].len() < 1))
                 return;
 
-            fe.signal(_actions[selected]);
+            if (actions[selected] == "do_history")
+            {
+                mameinfoviewer.show(false);
+                historyviewer.show(true);
+                return;
+            }
+            else if (actions[selected] == "do_mameinfo")
+            {
+                historyviewer.show(false);
+                mameinfoviewer.show(true);
+                return;
+            }
+            fe.signal(actions[selected]);
         }
     }
 }

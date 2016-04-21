@@ -10,100 +10,77 @@ shader code by: Timothy Lottes, LUKE NUKEM, krischan, Chris Van Graas
 
 class UserConfig </ help="FLAT BLUE - Aspect and rotation aware layout for Attract-Mode Front-End." />
 {
-    </ label="Layout rotation", help="Set the rotation of the layout to suit your monitor.  Default is None.", options="None, Right, Flip, Left", order=1 />
+    </ label="Layout rotation", help="Set the rotation of the layout to suit your monitor.", options="None, Right, Flip, Left", order=1 />
     layout_rotation = "None";
 
-    </ label="Menu artwork", help="Set menu panel artwork type.  Default is Snap.\nNOTE: Configure artwork types in emulator settings.", options="Snap, Title", order=2 />
+    </ label="Menu artwork", help="Set menu panel artwork type.", options="Snap, Title", order=2 />
     menu_art_type = "Snap";
 
-    </ label="Menu videos", help="Toggle video playback for menu artwork.  Default is Disabled.", options="Enabled, Disabled", order=3 />
+    </ label="Menu videos", help="Toggle video playback for menu artwork.", options="Enabled, Disabled", order=3 />
     menu_video = "Disabled";
 
-    </ label="Game info 1", help="Set game information to display in info panel.  Default is Year.", options="Year, ROM Name", order=4 />
+    </ label="Wheel logo", help="Toggle display of game wheel logos.", options="Enabled, Disabled", order=4 />
+    show_wheel = "Enabled";
+
+    </ label="Game info 1", help="Set game information to display in info panel.", options="Year, ROM Name", order=5 />
     game_info_1 = "Year";
 
-    </ label="Game info 2", help="Set game information to display in info panel.  Default is Manufacturer.", options="Manufacturer, Played Count", order=5 />
+    </ label="Game info 2", help="Set game information to display in info panel.", options="Manufacturer, Played Count", order=6 />
     game_info_2 = "Manufacturer";
 
-    </ label="Scanline overlay", help="Set scanline overlay effect strength. Default is Weakest.\nNOTE: Only used if CRT Shader is disabled.", options="Strongest, Strong, Medium, Weak, Weakest, Disabled", order=6 />
+    </ label="Scanline overlay", help="Set scanline overlay effect strength. Only used if CRT Shader is disabled.", options="Strongest, Strong, Medium, Weak, Weakest, Disabled", order=7 />
     scanline_strength = "Weakest";
 
-    </ label="Panel shadows", help="Set menu and information panel shadow effect strength.  Default is Medium.", options="Strongest, Strong, Medium, Weak, Weakest, Disabled", order=7 />
+    </ label="Panel shadows", help="Set menu and information panel shadow effect strength.", options="Strongest, Strong, Medium, Weak, Weakest, Disabled", order=8 />
     shadow_strength = "Medium";
 
-    </ label="CRT Shader", help="Toggle CRT Shader for snaps.  Default is Disabled.\nNOTE: Requires GPU that supports pixel shaders.  Disabled for resolutions under 1024x768.", options="Enabled, Disabled", order=8 />
+    </ label="CRT Shader", help="Toggle CRT Shader for snaps. Disabled for resolutions under 1024x768.", options="Enabled, Disabled", order=9 />
     crt_shader = "Disabled";
 
-    </ label="Shader resolution", help="Set the shader resolution.  Full works best with low resolution videos (under 640x480).  Half works best with high resolution (640x480 and above).", options="Full, Half", order=9 />
+    </ label="Shader resolution", help="Set the shader resolution. Use Full for low res videos (under 640x480), otherwise use Half", options="Full, Half", order=10 />
     shader_res = "Half";
 
-    </ label="Options menu button", help="Set the button/key to use for opening the layout Options menu.  Default is 1.", is_input=true, order=10 />
+    </ label="Options menu button", help="Set the button/key to use for opening the layout Options menu.", is_input=true, order=11 />
     options_button = "Num1";
 
-    </ label="Show wheel logo", help="Toggle game wheel logos.  Default is Yes.", options="Yes, No", order=11 />
-    show_wheel = "Yes";
+    </ label="History.dat", help="Toggle History.dat viewer in Options menu.", options="Enabled, Disabled", order=12 />
+    options_history = "Disabled";
+
+    </ label="MAMEInfo.dat", help="Toggle MameInfo.dat in Options menu.", options="Enabled, Disabled", order=13 />
+    options_mameinfo = "Disabled";
+
+    </ label="History.dat file path", help="The full path to the history.dat file.", order=14 />
+    historydat_path="$HOME/history.dat";
+
+    </ label="MAMEInfo.dat file path", help="The full path to the MAMEInfo.dat file", order=15 />
+    mameinfodat_path="$HOME/mameinfo.dat";
+
+    </ label="Index Clones", help="Set whether entries for clones should be included in the index. Enabling this will make the index significantly larger.", order=16, options="Yes,No" />
+    index_clones="No";
+
+    </ label="Generate Indexes", help="Generate indexes for History.dat and/or MAMEInfo.dat. (this can take some time)", is_function=true, order=17 />
+    generate="generate_indexes";
+
 }
 
-fe.load_module("preserve-art");
+const LAYOUT_NAME = "FLAT BLUE";
+const VERSION = 0.9995;
+const DEBUG = false;
+
+fe.load_module("pan-and-scan");
+fe.load_module("submenu");
 fe.do_nut("scripts/helperfunctions.nut");
 fe.do_nut("scripts/vectors.nut");
 fe.do_nut("scripts/layoutsettings.nut");
 fe.do_nut("scripts/background.nut");
 fe.do_nut("scripts/sidebar.nut");
 fe.do_nut("scripts/infopanel.nut");
+fe.do_nut("scripts/mamedats.nut");
 fe.do_nut("scripts/overlaymenu.nut");
 
-const LAYOUT_NAME = "FLAT BLUE";
-const VERSION = 0.9995;
-const DEBUG = false;
-
 local layout = LayoutSettings();
-local options = null;
 
-function init_options_menu()
-{
-    local options_items = [];
-    options_items.append("Toggle favourite");
-    options_items.append("Filters menu");
-    options_items.append("Displays menu");
-    options_items.append("Toggle audio mute");
-    options_items.append("Enable screensaver");
-    options_items.append("Configuration");
-    options_items.append("Exit Attract-Mode");
-
-    local options_actions = [];
-    options_actions.append("add_favourite");
-    options_actions.append("filters_menu");
-    options_actions.append("displays_menu");
-    options_actions.append("toggle_mute");
-    options_actions.append("screen_saver");
-    options_actions.append("configure");
-    options_actions.append("exit_no_menu");
-
-    local options_label = "Options Menu";
-
-    local options_button = layout.get_user_config("options_button");
-    options = OverlayMenu(options_items, options_actions, options_button, options_label);
-}
-
-function main()
-{
-    layout.initialize();
-
-    log(format("layout width:    %d", layout.get_layout_width()));
-    log(format("layout height:   %d", layout.get_layout_height()));
-    log(format("aspect ratio:    %d:%d (%f:1)", layout.get_layout_aspect_ratio_width(), layout.get_layout_aspect_ratio_height(), layout.get_layout_aspect_ratio_float()));
-    log(format("layout rotation: %s", layout.get_layout_rotation_name()));
-    log(format("lowres:          %s", layout.get_lowres_flag().tostring()));
-
-    Background(layout.settings);
-    SideBar(layout.settings);
-    InfoPanel(layout.settings);
-
-    init_options_menu();
-}
-
-local test_resolution = scalar2();
+// local test_resolution = scalar2();
 
 // test_resolution = scalar2(1920, 1080);
 // test_resolution = scalar2(1366, 768);
@@ -125,4 +102,15 @@ local test_resolution = scalar2();
 
 // layout.set_layout_dimensions(test_resolution);
 
-main()
+layout.initialize();
+
+Background(layout.settings);
+SideBar(layout.settings);
+InfoPanel(layout.settings);
+
+local overlaymenu = OverlayMenu(layout.settings);
+
+function generate_indexes(config)
+{
+    overlaymenu.generate_indexes();
+}

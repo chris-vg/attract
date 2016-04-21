@@ -64,6 +64,182 @@ Public Functions:
 
 */
 
+const READ_BLOCK_SIZE = 80960;
+const PHI = 1.618033988749;
+local next_ln_overflow=""; // used by the get_next_ln() function
+
+function generate_indexes(config)
+{
+    local return_history = "";
+    local return_mameinfo = "";
+    if (config["options_history"] == "Enabled") return_history = generate_index("History", config["historydat_path"], config["index_clones"]);
+    if (config["options_mameinfo"] == "Enabled") return_mameinfo = generate_index("MAMEInfo", config["mameinfodat_path"], config["index_clones"]);
+
+    if (return_history != "" && return_mameinfo != "")
+    {
+        return return_history + "\n" + return_mameinfo;
+    }
+    else if (return_history == "") return return_mameinfo;
+    else return return_history;
+}
+
+function generate_index(dat_type, datfile_name, index_clones)
+{
+    local history_idx_path = FeConfigDirectory + "history.idx/";
+    local mameinfo_idx_path = FeConfigDirectory + "mameinfo.idx/";
+    local datfile = null;
+
+    try
+    {
+        datfile = file(datfile_name, "rb");
+    }
+    catch ( e )
+    {
+        return "Error opening file: " + datfile_name;
+    }
+
+    local indices = {};
+
+    local last_per=0;
+
+    //
+    // Get an index for all the entries in history.dat
+    //
+    while ( !datfile.eos() )
+    {
+        local base_pos = datfile.tell();
+        local blb = datfile.readblob( READ_BLOCK_SIZE );
+
+        // Update the user with the percentage complete
+        local percent = 100.0 * ( datfile.tell().tofloat() / datfile.len().tofloat() );
+        if ( percent.tointeger() > last_per )
+        {
+            last_per = percent.tointeger();
+            if ( fe.overlay.splash_message(
+                    "Generating " + dat_type + " index ("
+                    + last_per + "%)" ) )
+                break; // break loop if user cancels
+        }
+        
+        while ( !blb.eos() )
+        {
+            local line = scan_for_ctrl_ln( blb );
+
+            if ( line.len() < 5 ) // skips $bio, $end
+                continue;
+
+            local eq = line.find( "=", 1 );
+            if ( eq != null )
+            {
+                local systems = split( line.slice(1,eq), "," );
+                local roms = split( line.slice(eq+1), "," );
+
+                foreach ( s in systems )
+                {
+                    if ( !indices.rawin( s ) )
+                        indices[ s ] <- {};
+
+                    if (index_clones == "Yes")
+                    {
+                        foreach ( r in roms )
+                            (indices[ s ])[ r ]
+                                <- ( base_pos + blb.tell() );
+                    }
+                    else if ( roms.len() > 0 )
+                    {
+                        (indices[ s ])[ roms[0] ]
+                            <- ( base_pos + blb.tell() );
+                    }
+                }
+            }
+        }
+    }
+
+    //
+    // Make sure the directory we are writing to exists...
+    //
+    local idx_path = "";
+    if (dat_type == "History") idx_path = history_idx_path;
+    else if (dat_type == "MAMEInfo") idx_path = mameinfo_idx_path;
+
+    system( "mkdir \"" + idx_path + "\"" );
+    fe.overlay.splash_message( "Writing index file." );
+
+    //
+    // Now write an index file for each system encountered
+    //
+    foreach ( n,l in indices )
+    {
+        local idx = file( idx_path + n + ".idx", "w" );
+        foreach ( rn,ri in l )
+            write_ln( idx, rn + ";" + ri + "\n" );
+
+        idx.close();
+    }
+
+    datfile.close();
+
+    return "Created index for " + indices.len()
+        + " systems in " + idx_path;
+}
+
+//
+// Get a single line of input from f
+//
+function get_next_ln( f )
+{
+    local ln = next_ln_overflow;
+    next_ln_overflow="";
+    while ( !f.eos() )
+    {
+        local char = f.readn( 'b' );
+        if ( char == '\n' )
+            return strip( ln );
+
+        ln += char.tochar();
+    }
+
+    next_ln_overflow=ln;
+    return "";
+}
+
+//
+// Write a single line of output to f
+//
+function write_ln( f, line )
+{
+    local b = blob( line.len() );
+
+    for (local i=0; i<line.len(); i++)
+        b.writen( line[i], 'b' );
+
+    f.writeblob( b );
+}
+
+//
+// Scan through f and return the next line starting with a "$"
+//
+function scan_for_ctrl_ln( f )
+{
+    local char;
+    while ( !f.eos() )
+    {
+        char = f.readn( 'b' );
+        if (( char == '\n' ) && ( !f.eos() ))
+        {
+            char = f.readn( 'b' );
+            if ( char == '$' )
+            {
+                next_ln_overflow="$";
+                return get_next_ln( f );
+            }
+        }
+    }
+    return "";
+}
+
+
+
 function round(value)
 {
     return floor(value + 0.5);

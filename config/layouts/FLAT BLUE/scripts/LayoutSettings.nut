@@ -221,6 +221,12 @@ class LayoutSettings
     {
         set_layout_rotation();
         init_layout_settings();
+
+        log(format("layout width:    %d", get_layout_width()));
+        log(format("layout height:   %d", get_layout_height()));
+        log(format("aspect ratio:    %d:%d (%f:1)", get_layout_aspect_ratio_width(), get_layout_aspect_ratio_height(), get_layout_aspect_ratio_float()));
+        log(format("layout rotation: %s", get_layout_rotation_name()));
+        log(format("lowres:          %s", get_lowres_flag().tostring()));
     }
 
     function init_layout_settings()
@@ -228,6 +234,8 @@ class LayoutSettings
         settings.bg <- {}
         settings.sidebar <- {}
         settings.infopanel <- {}
+        settings.overlaymenu <- {}
+        settings.mamedats <- {}
 
         switch(get_layout_aspect_ratio_name())
         {
@@ -699,6 +707,37 @@ class LayoutSettings
         settings.infopanel.game_text_font <- "Lato-Black.ttf";
         settings.infopanel.game_text_align <- Align.Right;
         settings.infopanel.game_text_word_wrap <- true;
+
+        settings.overlaymenu.button <- get_user_config("options_button");
+        settings.overlaymenu.label <- "Options Menu";
+        settings.overlaymenu.options_items <- [];
+        settings.overlaymenu.options_actions <- [];
+
+        settings.overlaymenu.options_items.append("Toggle favourite");
+        settings.overlaymenu.options_items.append("Filters menu");
+        if (get_user_config("options_history") == "Enabled") settings.overlaymenu.options_items.append("History");
+        if (get_user_config("options_mameinfo") == "Enabled") settings.overlaymenu.options_items.append("MameInfo");
+        settings.overlaymenu.options_items.append("Displays menu");
+        settings.overlaymenu.options_items.append("Toggle audio mute");
+        settings.overlaymenu.options_items.append("Enable screensaver");
+        settings.overlaymenu.options_items.append("Configuration");
+        settings.overlaymenu.options_items.append("Exit Attract-Mode");
+
+        settings.overlaymenu.options_actions.append("add_favourite");
+        settings.overlaymenu.options_actions.append("filters_menu");
+        if (get_user_config("options_history") == "Enabled") settings.overlaymenu.options_actions.append("do_history");
+        if (get_user_config("options_mameinfo") == "Enabled") settings.overlaymenu.options_actions.append("do_mameinfo");
+        settings.overlaymenu.options_actions.append("displays_menu");
+        settings.overlaymenu.options_actions.append("toggle_mute");
+        settings.overlaymenu.options_actions.append("screen_saver");
+        settings.overlaymenu.options_actions.append("configure");
+        settings.overlaymenu.options_actions.append("exit_no_menu");
+
+        settings.mamedats.history_enabled <- (get_user_config("options_history") == "Enabled") ? true : false;
+        settings.mamedats.mameinfo_enabled <- (get_user_config("options_mameinfo") == "Enabled") ? true : false;
+        settings.mamedats.historydat_path <- get_user_config("historydat_path");
+        settings.mamedats.mameinfodat_path <- get_user_config("mameinfodat_path");
+        settings.mamedats.index_clones <- get_user_config("index_clones");
     }
 
     function convert_scalar2(value)
