@@ -42,27 +42,20 @@ class MAMEDatViewer extends SubMenu
 
     function draw()
     {
-        local text_width = round(fe.layout.width / PHI);
-        local flyer_width = fe.layout.width - text_width;
-
-        surf = fe.add_surface(fe.layout.width, fe.layout.height);
-        local surf_bg = surf.add_image("images/pixel.png", 0, 0, surf.width, surf.height);
+        surf = fe.add_surface(settings.surface_dimensions.w, settings.surface_dimensions.h);
+        surf.set_pos(settings.surface_pos.x, settings.surface_pos.y);
+        local surf_bg = surf.add_image(settings.bg_image, settings.bg_pos.x, settings.bg_pos.y, settings.bg_dimensions.w, settings.bg_dimensions.h);
         surf_bg.set_rgb(0, 0, 0);
         surf_bg.alpha = 220;
 
-        surf_art = PanAndScanArt("flyer", 50, 50, flyer_width - 100, surf.height - 100);
-        surf_art.set_fit_or_fill("fill");
-        surf_art.set_anchor(::Anchor.Center);
-        surf_art.set_zoom(4.5, 0.00008);
-        surf_art.set_animate(::AnimateType.Bounce, 0.07, 0.07)
-        surf_art.set_randomize_on_transition(true);
-        surf_art.set_start_scale(1.15);
-
-        m_text = surf.add_text( "", flyer_width, 0, text_width, fe.layout.height );
+        m_text = surf.add_text( "", settings.text_pos.x, settings.text_pos.y, settings.text_dimensions.w, settings.text_dimensions.h);
         m_text.first_line_hint = 0; // enables word wrapping
-        m_text.charsize = fe.layout.height / 30;
+        m_text.charsize = settings.text_charsize;
         m_text.align = Align.Left;
-        surf_art.visible = false;
+        m_text.font = settings.text_font;
+
+        sidebar.draw_selected();
+
         surf.visible=false;
     }
 
@@ -115,12 +108,10 @@ class MAMEDatViewer extends SubMenu
         }
 
         surf.visible = true;
-        surf_art.visible = true;
     }
 
     function on_hide()
     {
-        surf_art.visible = false;
         surf.visible = false;
     }
 

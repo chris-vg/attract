@@ -64,7 +64,7 @@ class UserConfig </ help="FLAT BLUE - Aspect and rotation aware layout for Attra
 }
 
 const LAYOUT_NAME = "FLAT BLUE";
-const VERSION = 0.9995;
+const VERSION = 0.9997;
 const DEBUG = false;
 
 fe.load_module("pan-and-scan");
@@ -105,7 +105,7 @@ local layout = LayoutSettings();
 layout.initialize();
 
 Background(layout.settings);
-SideBar(layout.settings);
+::sidebar <- SideBar(layout.settings);
 InfoPanel(layout.settings);
 
 local overlaymenu = OverlayMenu(layout.settings);

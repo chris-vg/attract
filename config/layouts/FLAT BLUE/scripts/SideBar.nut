@@ -228,6 +228,17 @@ class SideBar
         }
     }
 
+    function draw_selected()
+    {
+        foreach (idx, item in panels)
+        {
+            if (idx == settings.panel_selected_index)
+            {
+                item.draw_selected(idx);
+            }
+        }
+    }
+
     function update(ttype, var, ttime)
     {
         if (ttype == Transition.ToNewList || ttype == Transition.FromOldSelection)

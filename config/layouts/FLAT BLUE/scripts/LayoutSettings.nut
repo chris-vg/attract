@@ -716,7 +716,7 @@ class LayoutSettings
         settings.overlaymenu.options_items.append("Toggle favourite");
         settings.overlaymenu.options_items.append("Filters menu");
         if (get_user_config("options_history") == "Enabled") settings.overlaymenu.options_items.append("History");
-        if (get_user_config("options_mameinfo") == "Enabled") settings.overlaymenu.options_items.append("MameInfo");
+        if (get_user_config("options_mameinfo") == "Enabled") settings.overlaymenu.options_items.append("MAMEInfo");
         settings.overlaymenu.options_items.append("Displays menu");
         settings.overlaymenu.options_items.append("Toggle audio mute");
         settings.overlaymenu.options_items.append("Enable screensaver");
@@ -738,6 +738,16 @@ class LayoutSettings
         settings.mamedats.historydat_path <- get_user_config("historydat_path");
         settings.mamedats.mameinfodat_path <- get_user_config("mameinfodat_path");
         settings.mamedats.index_clones <- get_user_config("index_clones");
+
+        settings.mamedats.surface_dimensions <- convert_scalar2(scalar2(settings.base_dimensions.w, settings.base_dimensions.h));
+        settings.mamedats.surface_pos <- convert_scalar2(scalar2(0, 0));
+        settings.mamedats.bg_image <- "images/pixel.png";
+        settings.mamedats.bg_dimensions <- convert_scalar2(scalar2(settings.mamedats.surface_dimensions.w, settings.mamedats.surface_dimensions.h));
+        settings.mamedats.bg_pos <- convert_scalar2(scalar2(0, 0));
+        settings.mamedats.text_font <- "Lato-Regular.ttf";
+        settings.mamedats.text_dimensions <- scalar2(settings.bg.dimensions.w - (settings.sidebar.panel_selected_arrow_dimensions.w * 0.85) , settings.bg.dimensions.h);
+        settings.mamedats.text_pos <- scalar2(settings.bg.pos.x + (settings.sidebar.panel_selected_arrow_dimensions.w * 0.85), settings.bg.pos.y);
+        settings.mamedats.text_charsize <- settings.mamedats.text_dimensions.h / 30;
     }
 
     function convert_scalar2(value)
