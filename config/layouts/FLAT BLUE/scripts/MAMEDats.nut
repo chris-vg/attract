@@ -12,8 +12,13 @@ based on History.dat plugin
 
 */
 
-class MAMEDatViewer extends SubMenu
+class MAMEDatViewer
 {
+    m_up = false;
+    m_block = false;
+    m_curr_scroll_button = "";
+    m_last_scroll_tick = 0;
+
     dat_path = null;
     idx_path = null;
     tag = null;
@@ -29,7 +34,7 @@ class MAMEDatViewer extends SubMenu
 
     constructor(layout_settings)
     {
-        base.constructor("");
+        fe.add_ticks_callback(this, "on_tick");
 
         settings = layout_settings.mamedats;
 
@@ -57,6 +62,63 @@ class MAMEDatViewer extends SubMenu
         sidebar.draw_selected();
 
         surf.visible=false;
+    }
+
+    function on_tick( ttime )
+    {
+        if ( m_curr_scroll_button.len() > 0 )
+        {
+            local nav_down = fe.get_input_state( m_curr_scroll_button );
+            if ( !nav_down )
+                m_curr_scroll_button = "";
+            else if ( ttime > m_last_scroll_tick + 80 )
+            {
+                on_signal( m_curr_scroll_button );
+                m_last_scroll_tick = ttime;
+            }
+        }
+    }
+
+    function on_signal(signal)
+    {
+        if (signal == "up")
+        {
+            on_scroll_up();
+            m_curr_scroll_button = signal;
+            return true;
+        }
+        else if (signal == "down")
+        {
+            on_scroll_down();
+            m_curr_scroll_button = signal;
+            return true;
+        }
+        else if (signal == "select")
+        {
+            on_select();
+            return true;
+        }
+        else if ((signal == "exit_no_menu") || (signal == "exit"))
+        {
+            show(false);
+            return true;
+        }
+        else if ((signal == "page_up") || (signal == "prev_letter"))
+        {
+            on_page_up();
+            m_curr_scroll_button = signal;
+            return true;
+        }
+        else if ((signal == "page_down") || (signal == "next_letter"))
+        {
+            on_page_down();
+            m_curr_scroll_button = signal;
+            return true;
+        }
+        else
+        {
+            return true;
+        }
     }
 
     function show(flag)
@@ -120,9 +182,24 @@ class MAMEDatViewer extends SubMenu
         m_text.first_line_hint--;
     }
 
+    function on_page_up()
+    {
+        m_text.first_line_hint -= 12;
+    }
+
     function on_scroll_down()
     {
         m_text.first_line_hint++;
+    }
+
+    function on_page_down()
+    {
+        m_text.first_line_hint += 12;
+    }
+
+    function on_select()
+    {
+        show(false);
     }
 
     //

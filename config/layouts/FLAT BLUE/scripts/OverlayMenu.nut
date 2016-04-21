@@ -53,13 +53,17 @@ class OverlayMenu
 
             if (actions[selected] == "do_history")
             {
+                historyviewer.show(false);
                 mameinfoviewer.show(false);
+
                 historyviewer.show(true);
                 return;
             }
             else if (actions[selected] == "do_mameinfo")
             {
                 historyviewer.show(false);
+                mameinfoviewer.show(false);
+
                 mameinfoviewer.show(true);
                 return;
             }

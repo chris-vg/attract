@@ -284,6 +284,8 @@ class LayoutSettings
                 settings.sidebar.panel_selected_text_charsize <-  (get_lowres_flag()) ? convert_height(27) : convert_height(22);
                 settings.infopanel.filter_text_charsize <- (get_lowres_flag()) ? convert_height(27) : convert_height(22);
                 settings.infopanel.game_text_charsize <- (get_lowres_flag()) ? convert_height(27) : convert_height(22);
+
+                settings.mamedats.text_lines <- (get_lowres_flag()) ? 40 : 40;
                 break;
 
             case "4:3":
@@ -331,6 +333,8 @@ class LayoutSettings
                 settings.sidebar.panel_selected_text_charsize <-  (get_lowres_flag()) ? convert_height(26) : convert_height(22);
                 settings.infopanel.filter_text_charsize <- (get_lowres_flag()) ? convert_height(24) : convert_height(22);
                 settings.infopanel.game_text_charsize <- (get_lowres_flag()) ? convert_height(24) : convert_height(22);
+
+                settings.mamedats.text_lines <- (get_lowres_flag()) ? 30 : 30;
                 break;
 
             case "4:5":
@@ -378,6 +382,8 @@ class LayoutSettings
                 settings.sidebar.panel_selected_text_charsize <- convert_height(22);
                 settings.infopanel.filter_text_charsize <- convert_height(22);
                 settings.infopanel.game_text_charsize <- convert_height(22);
+
+                settings.mamedats.text_lines <- 40;
                 break;
 
             case "5:4":
@@ -425,6 +431,8 @@ class LayoutSettings
                 settings.sidebar.panel_selected_text_charsize <- convert_height(22);
                 settings.infopanel.filter_text_charsize <- convert_height(22);
                 settings.infopanel.game_text_charsize <- convert_height(22);
+
+                settings.mamedats.text_lines <- 30;
                 break;
 
             case "3:5":
@@ -474,6 +482,8 @@ class LayoutSettings
                 settings.sidebar.panel_selected_text_charsize <-  (get_lowres_flag()) ? convert_height(26) : convert_height(22);
                 settings.infopanel.filter_text_charsize <- (get_lowres_flag()) ? convert_height(26) : convert_height(22);
                 settings.infopanel.game_text_charsize <- (get_lowres_flag()) ? convert_height(26) : convert_height(22);
+
+                settings.mamedats.text_lines <- (get_lowres_flag()) ? 45 : 50;
                 break;
 
             case "5:3":
@@ -523,6 +533,8 @@ class LayoutSettings
                 settings.sidebar.panel_selected_text_charsize <-  (get_lowres_flag()) ? convert_height(32) : convert_height(22);
                 settings.infopanel.filter_text_charsize <- (get_lowres_flag()) ? convert_height(27) : convert_height(22);
                 settings.infopanel.game_text_charsize <- (get_lowres_flag()) ? convert_height(27) : convert_height(22);
+
+                settings.mamedats.text_lines <- (get_lowres_flag()) ? 30 : 35;
                 break;
 
             case "384:683":
@@ -572,6 +584,8 @@ class LayoutSettings
                 settings.sidebar.panel_selected_text_charsize <-  (get_lowres_flag()) ? convert_height(25) : convert_height(22);
                 settings.infopanel.filter_text_charsize <- (get_lowres_flag()) ? convert_height(25) : convert_height(22);
                 settings.infopanel.game_text_charsize <- (get_lowres_flag()) ? convert_height(25) : convert_height(22);
+
+                settings.mamedats.text_lines <- 50;
                 break;
 
             case "683:384":
@@ -622,6 +636,8 @@ class LayoutSettings
                 settings.sidebar.panel_selected_text_charsize <-  (get_lowres_flag()) ? convert_height(25) : convert_height(22);
                 settings.infopanel.filter_text_charsize <- (get_lowres_flag()) ? convert_height(25) : convert_height(22);
                 settings.infopanel.game_text_charsize <- (get_lowres_flag()) ? convert_height(25) : convert_height(22);
+
+                settings.mamedats.text_lines <- 30;
                 break;
         }
         settings.bg.crt_shader <- get_user_config("crt_shader");
@@ -740,14 +756,14 @@ class LayoutSettings
         settings.mamedats.index_clones <- get_user_config("index_clones");
 
         settings.mamedats.surface_dimensions <- convert_scalar2(scalar2(settings.base_dimensions.w, settings.base_dimensions.h));
-        settings.mamedats.surface_pos <- convert_scalar2(scalar2(0, 0));
+        settings.mamedats.surface_pos <- scalar2(0, 0);
         settings.mamedats.bg_image <- "images/pixel.png";
-        settings.mamedats.bg_dimensions <- convert_scalar2(scalar2(settings.mamedats.surface_dimensions.w, settings.mamedats.surface_dimensions.h));
-        settings.mamedats.bg_pos <- convert_scalar2(scalar2(0, 0));
+        settings.mamedats.bg_dimensions <- scalar2(settings.mamedats.surface_dimensions.w, settings.mamedats.surface_dimensions.h);
+        settings.mamedats.bg_pos <- scalar2(0, 0);
         settings.mamedats.text_font <- "Lato-Regular.ttf";
-        settings.mamedats.text_dimensions <- scalar2(settings.bg.dimensions.w - (settings.sidebar.panel_selected_arrow_dimensions.w * 0.85) , settings.bg.dimensions.h);
-        settings.mamedats.text_pos <- scalar2(settings.bg.pos.x + (settings.sidebar.panel_selected_arrow_dimensions.w * 0.85), settings.bg.pos.y);
-        settings.mamedats.text_charsize <- settings.mamedats.text_dimensions.h / 30;
+        settings.mamedats.text_dimensions <- scalar2(settings.bg.dimensions.w - (settings.sidebar.panel_selected_arrow_dimensions.w) , settings.bg.dimensions.h);
+        settings.mamedats.text_pos <- scalar2(settings.bg.pos.x + (settings.sidebar.panel_selected_arrow_dimensions.w), settings.bg.pos.y);
+        settings.mamedats.text_charsize <- round(settings.mamedats.text_dimensions.h / settings.mamedats.text_lines);
     }
 
     function convert_scalar2(value)
