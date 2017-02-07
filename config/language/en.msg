@@ -13,7 +13,8 @@ _help_art_path;The path to the files for this artwork.  Multiple paths can be en
 _help_back;Exit menu
 _help_confirm_favs;Confirm the addition/removal of Favourites
 _help_control_add_favourite;Set the control(s) that mark/unmark the currently selected game as a favourite
-_help_control_add_tags;Set the control(s) to add/remove tags from the currently selected game
+_help_control_add_tags;Set the control(s) that add/remove tags from the currently selected game
+_help_control_back;Set the control(s) that go back
 _help_control_configure;Set the control(s) that show the "Configuration Menu"
 _help_control_custom1;Set the "Custom1" control(s)
 _help_control_custom2;Set the "Custom2" control(s)
@@ -23,21 +24,27 @@ _help_control_custom5;Set the "Custom5" control(s)
 _help_control_custom6;Set the "Custom6" control(s)
 _help_control_displays_menu;Set the control(s) that show the "Displays Menu"
 _help_control_down;Set the control(s) that move the selection down
+_help_control_edit_game;Set the control(s) to edit the current selection
 _help_control_exit;Set the control(s) that exit the frontend
 _help_control_exit_no_menu;Set the control(s) that exit the frontend immediately to the desktop
 _help_control_filters_menu;Set the control(s) that show the "Filters Menu"
+_help_control_intro;Set the control(s) that show the intro video
+_help_control_left;Set the control(s) that move the selection left
 _help_control_next_display;Set the control(s) that move to the next display
 _help_control_next_favourite;Set the control(s) that move to the next favourite
 _help_control_next_filter;Set the control(s) that move to the next filter
+_help_control_next_game;Set the control(s) that move to the next game
 _help_control_next_letter;Set the control(s) that move to the next letter
-_help_control_page_down;Set the control(s) that move the selection down one page
-_help_control_page_up;Set the control(s) that move the selection up one page
+_help_control_next_page;Set the control(s) that move the selection up one page
 _help_control_prev_display;Set the control(s) that move to the previous display
 _help_control_prev_favourite;Set the control(s) that move to the previous favourite
 _help_control_prev_filter;Set the control(s) that move to the previous filter
+_help_control_prev_game;Set the control(s) that move to the previous game
 _help_control_prev_letter;Set the control(s) that move to the previous letter
+_help_control_prev_page;Set the control(s) that move the selection down one page
 _help_control_random_game;Set the control(s) that select a random game from the current list
 _help_control_replay_last_game;Set the control(s) that relaunch the last game played
+_help_control_right;Set the control(s) that move the selection right
 _help_control_screen_saver;Set the control(s) that launch screen saver mode
 _help_control_screenshot;Set the control(s) that take a screenshot of the frontend
 _help_control_select;Set the control(s) that launch the current selection
@@ -71,12 +78,13 @@ _help_emu_executable;The full path and name of the emulator executable. $HOME ge
 _help_emu_exit_hotkey;Set a global hotkey to exit the emulator.  Attract-Mode will terminate the emulator process if this hotkey gets pressed
 _help_emu_gen_romlist;Generate a romlist by searching the configured rom path for roms with the configured extension, incorporating XML and additional import file information into the generated list (if available)
 _help_emu_import_extras;Path to any additional files that need to be read when generating a romlist for this emulator.  Supported files are: catver.ini (for game categories), nplayers.ini (for number of players) and mame.xml.  Multiple file paths can be entered if separated by a semicolon
-_help_emu_info_source;Use "listxml" if the emulator provides mame -listxml output, "listsoftware" for mame/mess -listsoftware output, "thegamesdb.net" to scrape data from thegamesdb.net, "steam" to read from a steam installation, or "scummvm" if the emulator is scummvm.  "listsoftware" and "thegamesdb.net" also require that a System Identifier recognized by those sources be configured
+_help_emu_info_source;Use "listxml" for mame -listxml output, "listsoftware" for mame/mess -listsoftware output, "thegamesdb.net" to scrape data from thegamesdb.net, "steam" to read from a steam installation, or "scummvm" if the emulator is scummvm.  "listsoftware" and "thegamesdb.net" also require that a System Identifier recognized by those sources be configured
 _help_emu_minimum_run_time;Set a minimum run time (in seconds).  Attract-Mode will wait after running this emulator until the minimum time has expired and it becomes the foreground window.  This needs to be set for Steam to work correctly on Windows.  Set this to 0 unless you know you need it
 _help_emu_romext;The rom extension(s) for this emulator (i.e. .zip).  Multiple extensions can be entered if separated by a semicolon.  Specify "<DIR>" as an entry if games are stored in separate subdirectories
 _help_emu_rompath;The path to the roms for this emulator.  Multiple paths can be entered if separated by a semicolon.
 _help_emu_scrape_artwork;Scrape missing artwork images for this emulator from TheGamesDB.net and mamedb.com
 _help_emu_sel;Configure emulator
+_help_emu_sel_gen_romlist;Generate a Collection/Romlist containing games for multiple emulators
 _help_emu_system;The system identifier(s) for this emulator.  Multiple values can be entered if separated by a semicolon
 _help_emulators;Configure emulator settings
 _help_exit_command;Command to execute when Exit (Confirm) is selected [i.e. "sudo shutdown"]
@@ -90,10 +98,17 @@ _help_filter_rule;Configure this filter rule.  A game must match all filter rule
 _help_filter_sort_by;The game information attribute that you wish to sort the collection/rom list by.  Set to "No Sort" to keep the ordering from the source collection/rom list
 _help_filter_wrap_mode;Set what happens when the "Next Filter" or "Previous Filter" actions reach the end of the filter set
 _help_font_path;The directories containing fonts.  Multiple directories can be entered if separated by a semicolon.  Attract-Mode will recursively search these directories to find a specified font
+_help_game_custom_args;Set this to override the default command line arguments for this game.  Set this to [nothing] if you want to override with no parameters.  The following get substituted appropriately: [name], [romext], [rompath], [emulator], [romfilename], [system], [systemn]
+_help_game_custom_executable;Set this to override the default executable for this game
+_help_game_delete;Delete this game from the Romlist
+_help_game_edit;Edit this game information
+_help_generator_build;Generate romlist with the selected emulator(s)
+_help_generator_opt;Set whether this emulator is to be included in the generated romlist
 _help_hide_brackets;Hide text in brackets when showing game titles
 _help_input_action;
-_help_input_add;Add a new control mapping for this action
-_help_input_delete;Remove this control mapping
+_help_input_add;Add a new input mapping for this control
+_help_input_default_action;Set the default behaviour for this control
+_help_input_delete;Remove this input mapping
 _help_intro;Configure intro
 _help_joystick_threshold;The threshold for registering joystick moves, from 1 to 100 (100=least sensitive)
 _help_language;Select the language to use in Attract-Mode's user interface
@@ -121,6 +136,7 @@ _help_sound;Configure sound volumes, sound event mappings and the ambient soundt
 _help_sound_sel;Assign a sound to this event/action
 _help_startup_mode;Set what should happen when Attract-Mode first starts up
 _help_track_usage;Configure whether Attract-Mode should track usage (played time and play count for each game)
+_help_video_decoder;Configure the decoder to use for video playback (if multiple decoders are available)
 _help_volume;Valid volume settings are from 0 (mute) to 100 
 _help_window_mode;Set whether Attract-Mode fills the screen or runs in a window
 _sort_regexp;^(Vs\. The |The |Vs\. )
@@ -128,9 +144,11 @@ _sort_regexp;^(Vs\. The |The |Vs\. )
 #
 # Extra strings provided by translation
 #
+de;Deutsch
 en;English
 es;Español
 fr;Français
+it;Italiano
 jp;日本語 (Japanese)
 kr;한글 (Korean)
 

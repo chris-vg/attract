@@ -1,7 +1,7 @@
 /*
  *
  *  Attract-Mode frontend
- *  Copyright (C) 2013 Andrew Mickelson
+ *  Copyright (C) 2013-2016 Andrew Mickelson
  *
  *  This file is part of Attract-Mode.
  *
@@ -32,6 +32,7 @@
 #endif
 
 #include <iostream>
+#include <fstream>
 
 FeMenuOpt::FeMenuOpt( int t, const std::string &set, const std::string &val )
 	: m_list_index( -1 ),
@@ -206,11 +207,13 @@ bool FeEmuArtEditMenu::save( FeConfigContext &ctx )
 }
 
 void FeEmuArtEditMenu::set_art( FeEmulatorInfo *emu,
-					const std::string &art_name )
+	const std::string &art_name )
 {
 	m_emulator = emu;
 	m_art_name = art_name;
 }
+
+const char *GENERATOR_LABEL = "Generate Collection/Rom List";
 
 FeEmulatorEditMenu::FeEmulatorEditMenu()
 	: m_emulator( NULL ),
@@ -276,12 +279,10 @@ void FeEmulatorEditMenu::get_options( FeConfigContext &ctx )
 		ctx.add_optl( Opt::SUBMENU, "Add Artwork", "", "_help_art_add" );
 		ctx.back_opt().opaque = 2;
 
-		ctx.add_optl( Opt::SUBMENU, "Generate Collection/Rom List", "",
-								"_help_emu_gen_romlist" );
+		ctx.add_optl( Opt::SUBMENU, GENERATOR_LABEL, "", "_help_emu_gen_romlist" );
 		ctx.back_opt().opaque = 3;
 
-		ctx.add_optl( Opt::SUBMENU, "Scrape Artwork", "",
-								"_help_emu_scrape_artwork" );
+		ctx.add_optl( Opt::SUBMENU, "Scrape Artwork", "", "_help_emu_scrape_artwork" );
 		ctx.back_opt().opaque = 4;
 
 		ctx.add_optl( Opt::EXIT, "Delete this Emulator", "", "_help_emu_delete" );
@@ -374,8 +375,11 @@ bool FeEmulatorEditMenu::on_option_select(
 			if ( fep )
 				fep->set_video_play_state( false );
 
-			ctx.fe_settings.build_romlist( emu_name, gen_ui_update, &ctx,
-								ctx.help_msg );
+			std::vector<std::string> emu_list;
+			emu_list.push_back( emu_name );
+
+			ctx.fe_settings.build_romlist(
+				emu_list, emu_name, gen_ui_update, &ctx, ctx.help_msg );
 
 			if ( fep )
 				fep->set_video_play_state(
@@ -475,7 +479,7 @@ bool FeEmulatorEditMenu::save( FeConfigContext &ctx )
 }
 
 void FeEmulatorEditMenu::set_emulator(
-				FeEmulatorInfo *emu, bool is_new, const std::string &romlist_dir )
+	FeEmulatorInfo *emu, bool is_new, const std::string &romlist_dir )
 {
 	m_emulator=emu;
 	m_is_new=is_new;
@@ -492,20 +496,180 @@ void FeEmulatorEditMenu::set_emulator(
 		m_romlist_exists = false;
 }
 
-void FeEmulatorSelMenu::get_options( FeConfigContext &ctx )
+//
+// Class for storing the romlist generator default selections in generator.am
+//
+class FeRLGenDefaults : public FeBaseConfigurable
 {
-	ctx.set_style( FeConfigContext::SelectionList, "Config / Emulators" );
+private:
+	std::string m_name;
+	std::set<std::string> m_sel;
 
-	std::string path = ctx.fe_settings.get_config_dir();
-	path += FE_EMULATOR_SUBDIR;
+public:
+	FeRLGenDefaults() {};
+
+	FeRLGenDefaults( const std::string &n, const std::vector<std::string> s )
+		: m_name( n )
+	{
+		for ( std::vector<std::string>::const_iterator itr=s.begin(); itr!=s.end(); ++itr )
+			m_sel.insert( *itr );
+	}
+
+	int process_setting( const std::string &setting,
+		const std::string &value,
+		const std::string &filename )
+	{
+		size_t pos=0;
+		std::string token;
+
+		if ( setting.compare( "selected" ) == 0 )
+		{
+			while ( token_helper( value, pos, token, ";" ) )
+				m_sel.insert( token );
+		}
+		else if ( setting.compare( "name" ) == 0 )
+			token_helper( value, pos, m_name );
+
+		return 0;
+	}
+
+	void save( const std::string &filename )
+	{
+		std::ofstream outfile( filename.c_str() );
+		if ( outfile.is_open() )
+		{
+			outfile << "selected ";
+			for ( std::set<std::string>::iterator itr=m_sel.begin(); itr!=m_sel.end(); ++itr )
+				outfile << *itr << ";";
+
+			outfile << std::endl;
+			outfile << "name " << m_name << std::endl;
+		}
+		outfile.close();
+	}
+
+	bool contains( const std::string &emu_name )
+	{
+		return ( m_sel.find( emu_name ) != m_sel.end() );
+	}
+
+	const std::string &get_default_name()
+	{
+		return m_name;
+	}
+};
+
+const char *GENERATOR_FN = "generator.am";
+
+void FeEmulatorGenMenu::get_options( FeConfigContext &ctx )
+{
+	ctx.set_style( FeConfigContext::EditList, GENERATOR_LABEL );
 
 	std::vector<std::string> emu_file_list;
-	get_basename_from_extension(
-			emu_file_list,
-			path,
-			FE_EMULATOR_FILE_EXTENSION );
+	ctx.fe_settings.get_list_of_emulators( emu_file_list );
 
-	std::sort( emu_file_list.begin(), emu_file_list.end() );
+	FeRLGenDefaults defaults;
+	defaults.load_from_file( ctx.fe_settings.get_config_dir() + GENERATOR_FN );
+	m_default_name = defaults.get_default_name();
+
+	std::vector<std::string> bool_opts( 2 );
+	ctx.fe_settings.get_resource( "Yes", bool_opts[0] );
+	ctx.fe_settings.get_resource( "No", bool_opts[1] );
+
+	for ( std::vector<std::string>::iterator itr=emu_file_list.begin();
+			itr < emu_file_list.end(); ++itr )
+	{
+		ctx.add_opt( Opt::LIST, *itr,
+			defaults.contains( *itr ) ? "Yes" : "No",
+			"_help_generator_opt" );
+
+		ctx.back_opt().append_vlist( bool_opts );
+	}
+
+	ctx.add_optl( Opt::SUBMENU, GENERATOR_LABEL, "", "_help_generator_build" );
+	ctx.back_opt().opaque = 1;
+
+	FeBaseConfigMenu::get_options( ctx );
+}
+
+bool FeEmulatorGenMenu::on_option_select(
+	FeConfigContext &ctx, FeBaseConfigMenu *& submenu )
+{
+	FeMenuOpt &o = ctx.curr_opt();
+	if ( o.opaque == 1 )
+	{
+		FePresent *fep = FePresent::script_get_fep();
+		if ( fep )
+			fep->set_video_play_state( false );
+
+		std::vector < std::string > emu_list;
+		int i=0;
+
+		while ( ctx.opt_list[i].opaque != 1 )
+		{
+			if ( ctx.opt_list[i].get_vindex() == 0 )
+				emu_list.push_back( ctx.opt_list[i].setting );
+
+			i++;
+		}
+
+		std::string res = m_default_name;
+		if ( res.empty() && !emu_list.empty() )
+		{
+			// Create reasonable default name if we don't have one yet
+			if ( emu_list.size() == 1 )
+				res = emu_list[0];
+			else
+				ctx.fe_settings.get_resource( "multi", res );
+		}
+
+		if ( !ctx.edit_dialog( "Enter Romlist name", res ) || res.empty() )
+			return false;
+
+		std::string path = ctx.fe_settings.get_config_dir();
+		path += FE_ROMLIST_SUBDIR;
+		path += res;
+		path += FE_ROMLIST_FILE_EXTENSION;
+
+		if ( file_exists( path ) )
+		{
+			if ( ctx.confirm_dialog( "Overwrite existing '$1' list?",
+					res ) == false )
+				return false;
+		}
+
+		ctx.fe_settings.build_romlist( emu_list, res, gen_ui_update, &ctx,
+			ctx.help_msg );
+
+		// Save these settings as defaults for next time
+		FeRLGenDefaults defaults( res, emu_list );
+		defaults.save( ctx.fe_settings.get_config_dir() + GENERATOR_FN );
+
+		if ( fep )
+			fep->set_video_play_state(
+				fep->get_video_toggle() );
+
+		//
+		// If we don't have a display configured for this romlist,
+		// configure one now
+		//
+		if ( !ctx.fe_settings.check_romlist_configured( res ) )
+		{
+			FeDisplayInfo *new_disp = ctx.fe_settings.create_display( res );
+			new_disp->set_info( FeDisplayInfo::Romlist, res );
+			ctx.save_req = true;
+		}
+	}
+
+	return true;
+}
+
+void FeEmulatorSelMenu::get_options( FeConfigContext &ctx )
+{
+	ctx.set_style( FeConfigContext::SelectionList, "Configure / Emulators" );
+
+	std::vector<std::string> emu_file_list;
+	ctx.fe_settings.get_list_of_emulators( emu_file_list );
 
 	for ( std::vector<std::string>::iterator itr=emu_file_list.begin();
 			itr < emu_file_list.end(); ++itr )
@@ -514,11 +678,14 @@ void FeEmulatorSelMenu::get_options( FeConfigContext &ctx )
 	ctx.add_optl( Opt::MENU, "Add Emulator", "", "_help_emu_add" );
 	ctx.back_opt().opaque = 1;
 
+	ctx.add_optl( Opt::SUBMENU, GENERATOR_LABEL, "", "_help_emu_sel_gen_romlist" );
+	ctx.back_opt().opaque = 2;
+
 	FeBaseConfigMenu::get_options( ctx );
 }
 
 bool FeEmulatorSelMenu::on_option_select(
-		FeConfigContext &ctx, FeBaseConfigMenu *& submenu )
+	FeConfigContext &ctx, FeBaseConfigMenu *& submenu )
 {
 	FeMenuOpt &o = ctx.curr_opt();
 
@@ -531,13 +698,15 @@ bool FeEmulatorSelMenu::on_option_select(
 	if ( o.opaque == 1 )
 	{
 		std::string res;
-		ctx.edit_dialog( "Enter Emulator Name", res );
-
-		if ( res.empty() )
+		if ( !ctx.edit_dialog( "Enter Emulator Name", res ) || res.empty() )
 			return false;
 
 		e = ctx.fe_settings.create_emulator( res );
 		flag = true;
+	}
+	else if ( o.opaque == 2 )
+	{
+		submenu = &m_gen_menu;
 	}
 	else
 		e = ctx.fe_settings.get_emulator( o.setting );
@@ -618,7 +787,7 @@ void FeRuleEditMenu::get_options( FeConfigContext &ctx )
 }
 
 bool FeRuleEditMenu::on_option_select(
-		FeConfigContext &ctx, FeBaseConfigMenu *& submenu )
+	FeConfigContext &ctx, FeBaseConfigMenu *& submenu )
 {
 	FeMenuOpt &o = ctx.curr_opt();
 	if ( o.opaque == 1 ) // the "delete" option
@@ -957,9 +1126,7 @@ bool FeDisplayEditMenu::on_option_select(
 		if ( o.opaque == 1 )
 		{
 			std::string res;
-			ctx.edit_dialog( "Enter Filter Name", res );
-
-			if ( res.empty() )
+			if ( !ctx.edit_dialog( "Enter Filter Name", res ) || res.empty() )
 				return false;		// if they don't enter a name then cancel
 
 			ctx.fe_settings.create_filter( *m_display, res );
@@ -1058,9 +1225,7 @@ bool FeDisplaySelMenu::on_option_select(
 	if ( o.opaque == 100000 )
 	{
 		std::string res;
-		ctx.edit_dialog( "Enter Display Name", res );
-
-		if ( res.empty() )
+		if ( !ctx.edit_dialog( "Enter Display Name", res ) || res.empty() )
 			return false;		// if they don't enter a name then cancel
 
 		ctx.save_req=true;
@@ -1106,6 +1271,24 @@ void FeInputEditMenu::get_options( FeConfigContext &ctx )
 
 		ctx.add_optl( Opt::RELOAD, "Add Input", "", "_help_input_add" );
 		ctx.back_opt().opaque = 1;
+
+		if ( m_mapping->command < FeInputMap::Select )
+		{
+			std::vector < std::string > ol;
+			int i=FeInputMap::Select+1;
+			while ( FeInputMap::commandDispStrings[i] != NULL )
+				ol.push_back( FeInputMap::commandDispStrings[i++] );
+
+			ol.push_back( "" );
+
+			FeInputMap::Command cc = ctx.fe_settings.get_default_command( m_mapping->command );
+			std::string cc_str = ( cc == FeInputMap::LAST_COMMAND )
+				? "" : FeInputMap::commandDispStrings[cc];
+
+			ctx.add_optl( Opt::LIST, "Default Action", cc_str, "_help_input_default_action" );
+			ctx.back_opt().append_vlist( ol );
+			ctx.back_opt().opaque = 2;
+		}
 	}
 
 	FeBaseConfigMenu::get_options( ctx );
@@ -1124,10 +1307,13 @@ bool FeInputEditMenu::on_option_select(
 		{
 			if (( m_mapping->input_list.size() <= 1 ) && (
 					( m_mapping->command == FeInputMap::Select )
+					|| ( m_mapping->command == FeInputMap::Back )
 					|| ( m_mapping->command == FeInputMap::Up )
-					|| ( m_mapping->command == FeInputMap::Down ) ) )
+					|| ( m_mapping->command == FeInputMap::Down )
+					|| ( m_mapping->command == FeInputMap::Left )
+					|| ( m_mapping->command == FeInputMap::Right ) ) )
 			{
-				// We don't let the user unmap all "Up", "Down" or "Select" controls.
+				// We don't let the user unmap all UI menu controls.
 				// Doing so would prevent them from further navigating configure mode.
 				break;
 			}
@@ -1154,9 +1340,13 @@ bool FeInputEditMenu::on_option_select(
 			FeInputMap::Command conflict( FeInputMap::LAST_COMMAND );
 			ctx.input_map_dialog( "Press Input", res, conflict );
 
+			if ( res.empty() )
+				return true;
+
 			bool save=true;
-			if (( conflict != FeInputMap::LAST_COMMAND )
-				&& ( conflict != m_mapping->command ))
+			if ( conflict == m_mapping->command )
+				save = false; // don't add duplicate entries
+			else if ( conflict != FeInputMap::LAST_COMMAND )
 			{
 				std::string command_str;
 				ctx.fe_settings.get_resource( FeInputMap::commandDispStrings[ conflict ], command_str );
@@ -1183,6 +1373,21 @@ bool FeInputEditMenu::save( FeConfigContext &ctx )
 {
 	if ( m_mapping )
 	{
+		int idx = ctx.opt_list.size() - 2;
+		if ( ctx.opt_list[idx].opaque == 2 )
+		{
+			// Set default mapping
+			int val = ctx.opt_list[idx].get_vindex();
+			if ( val == (int)ctx.opt_list[idx].values_list.size()-1 ) // the empty entry
+				val = FeInputMap::LAST_COMMAND;
+			else
+				val += FeInputMap::Select+1;
+
+			ctx.fe_settings.set_default_command(
+				m_mapping->command,
+				(FeInputMap::Command)val );
+		}
+
 		ctx.fe_settings.set_input_mapping( *m_mapping );
 	}
 
@@ -1218,11 +1423,26 @@ void FeInputSelMenu::get_options( FeConfigContext &ctx )
 			value += (*iti);
 		}
 
+		//
+		// Show the default action in brackets beside the UI controls (up/down/left...etc)
+		//
+		std::string name = FeInputMap::commandDispStrings[(*it).command];
+		if ( (*it).command < FeInputMap::Select )
+		{
+			FeInputMap::Command c = ctx.fe_settings.get_default_command( (*it).command );
+			if ( c != FeInputMap::LAST_COMMAND )
+			{
+				name += " (";
+				name += FeInputMap::commandDispStrings[c];
+				name += ")";
+			}
+		}
+
 		std::string help_msg( "_help_control_" );
 		help_msg += FeInputMap::commandStrings[(*it).command];
 
 		ctx.add_optl( Opt::SUBMENU,
-			FeInputMap::commandDispStrings[(*it).command],
+			name,
 			value,
 			help_msg );
 	}
@@ -1543,7 +1763,6 @@ void FeMiscMenu::get_options( FeConfigContext &ctx )
 			ctx.fe_settings.get_info( FeSettings::FontPath ),
 			"_help_font_path" );
 
-#ifndef FE_RPI
 	std::string winmode;
 	ctx.fe_settings.get_resource( FeSettings::windowModeDispTokens[ ctx.fe_settings.get_window_mode() ], winmode );
 	std::vector < std::string > modes;
@@ -1556,7 +1775,27 @@ void FeMiscMenu::get_options( FeConfigContext &ctx )
 	}
 	ctx.add_optl( Opt::LIST, "Window Mode", winmode, "_help_window_mode" );
 	ctx.back_opt().append_vlist( modes );
+
+	std::vector < std::string > decoders;
+	std::string vid_dec;
+
+#ifdef NO_MOVIE
+	vid_dec = "software";
+	decoders.push_back( vid_dec );
+#else
+	vid_dec = FeMedia::get_decoder_label( FeMedia::get_current_decoder() );
+
+	FeMedia::VideoDecoder d=FeMedia::software;
+	while ( d != FeMedia::LAST_DECODER )
+	{
+		if ( FeMedia::get_decoder_available( d ) )
+			decoders.push_back( FeMedia::get_decoder_label( d ) );
+
+		d = (FeMedia::VideoDecoder)(d+1);
+	}
 #endif
+	ctx.add_optl( Opt::LIST, "Video Decoder", vid_dec, "_help_video_decoder" );
+	ctx.back_opt().append_vlist( decoders );
 
 	FeBaseConfigMenu::get_options( ctx );
 }
@@ -1595,10 +1834,11 @@ bool FeMiscMenu::save( FeConfigContext &ctx )
 	ctx.fe_settings.set_info( FeSettings::FontPath,
 			ctx.opt_list[10].get_value() );
 
-#ifndef FE_RPI
 	ctx.fe_settings.set_info( FeSettings::WindowMode,
 			FeSettings::windowModeTokens[ ctx.opt_list[11].get_vindex() ] );
-#endif
+
+	ctx.fe_settings.set_info( FeSettings::VideoDecoder,
+			ctx.opt_list[12].get_value() );
 
 	return true;
 }
@@ -1951,5 +2191,177 @@ bool FeConfigMenu::on_option_select(
 bool FeConfigMenu::save( FeConfigContext &ctx )
 {
 	ctx.fe_settings.save();
+	return true;
+}
+
+void FeEditGameMenu::get_options( FeConfigContext &ctx )
+{
+	ctx.set_style( FeConfigContext::EditList, "Edit Game" );
+
+	for ( int i=0; i < (int)FeRomInfo::FileIsAvailable; i++ )
+	{
+		int type = Opt::EDIT;
+		std::vector<std::string> ol;
+
+		switch ( i )
+		{
+		case FeRomInfo::Emulator:
+			ctx.fe_settings.get_list_of_emulators( ol );
+			type = Opt::LIST;
+			break;
+
+		case FeRomInfo::Rotation:
+			ol.push_back( "0" );
+			ol.push_back( "90" );
+			ol.push_back( "180" );
+			ol.push_back( "270" );
+			type = Opt::LIST;
+			break;
+
+		case FeRomInfo::DisplayType:
+			ol.push_back( "raster" );
+			ol.push_back( "vector" );
+			ol.push_back( "lcd" );
+			ol.push_back( "unknown" );
+			ol.push_back( "" );
+			type = Opt::LIST;
+			break;
+
+		case FeRomInfo::Status:
+			ol.push_back( "good" );
+			ol.push_back( "imperfect" );
+			ol.push_back( "preliminary" );
+			ol.push_back( "" );
+			type = Opt::LIST;
+			break;
+
+		case FeRomInfo::Favourite:
+		case FeRomInfo::Tags:
+			type = Opt::RELOAD;
+			break;
+
+		default:
+			break;
+		}
+
+		ctx.add_optl( type, FeRomInfo::indexStrings[i],
+			ctx.fe_settings.get_rom_info( 0, 0, (FeRomInfo::Index)i ),
+			"_help_game_edit" );
+
+		if ( !ol.empty() )
+			ctx.back_opt().append_vlist( ol );
+	}
+
+	ctx.opt_list[ FeRomInfo::Favourite ].opaque = 1;
+	ctx.opt_list[ FeRomInfo::Tags ].opaque = 2;
+
+	ctx.opt_list[ FeRomInfo::PlayedCount ].opaque = 3;
+	ctx.opt_list[ FeRomInfo::PlayedTime ].opaque = 3;
+
+	ctx.add_optl( Opt::EDIT, "Custom Executable",
+		ctx.fe_settings.get_game_extra( FeSettings::Executable ),
+		"_help_game_custom_executable" );
+	ctx.back_opt().opaque = 4;
+
+	ctx.add_optl( Opt::EDIT, "Custom Arguments",
+		ctx.fe_settings.get_game_extra( FeSettings::Arguments ),
+		"_help_game_custom_args" );
+	ctx.back_opt().opaque = 4;
+
+	ctx.add_optl( Opt::EXIT, "Delete this Game", "", "_help_game_delete" );
+	ctx.back_opt().opaque = 100;
+
+	m_update_stats=false;
+	m_update_rl=false;
+	m_update_extras=false;
+
+	int filter_idx = ctx.fe_settings.get_filter_index_from_offset( 0 );
+	int rom_idx = ctx.fe_settings.get_rom_index( filter_idx, 0 );
+
+	FeRomInfo *rom = ctx.fe_settings.get_rom_absolute( filter_idx, rom_idx );
+	if ( rom )
+		m_rom_original = *rom;
+
+	FeBaseConfigMenu::get_options( ctx );
+}
+
+bool FeEditGameMenu::on_option_select( FeConfigContext &ctx, FeBaseConfigMenu *& submenu )
+{
+	switch ( ctx.curr_opt().opaque )
+	{
+	case 1: // Favourite
+		{
+			bool new_state = !ctx.fe_settings.get_current_fav();
+
+			std::string msg = ( new_state )
+				? "Add '$1' to Favourites?"
+				: "Remove '$1' from Favourites?";
+
+			if ( ctx.confirm_dialog( msg, ctx.opt_list[1].get_value() ) )
+				ctx.fe_settings.set_current_fav( new_state );
+		}
+		break;
+
+	case 2: // Tags
+		ctx.tags_dialog();
+		break;
+
+	case 3: // PlayedCount, PlayedTime
+		m_update_stats = true;
+		break;
+
+	case 4: // Custom Executable, Command Arguments
+		m_update_extras = true;
+		break;
+
+	case 100: // Delete Game
+		if ( ctx.confirm_dialog( "Delete game '$1'?", ctx.opt_list[1].get_value() ) )
+		{
+			ctx.fe_settings.update_romlist_after_edit( m_rom_original, m_rom_original, true );
+			return true;
+		}
+		return false;
+	default:
+		m_update_rl = true;
+		break;
+	}
+
+	return true;
+}
+
+bool FeEditGameMenu::save( FeConfigContext &ctx )
+{
+	int filter_idx = ctx.fe_settings.get_filter_index_from_offset( 0 );
+	int rom_idx = ctx.fe_settings.get_rom_index( filter_idx, 0 );
+
+	FeRomInfo *rom = ctx.fe_settings.get_rom_absolute( filter_idx, rom_idx );
+
+	FeRomInfo replacement;
+	if (rom)
+		replacement = *rom;
+
+	// Update working romlist with the info provided by the user
+	//
+	int border = (int)FeRomInfo::FileIsAvailable;
+	for ( int i=0; i < border; i++ )
+		replacement.set_info( (FeRomInfo::Index)i, ctx.opt_list[i].get_value() );
+
+	// Resave the romlist file that our romlist was loaded from
+	//
+	if ( m_update_rl )
+		ctx.fe_settings.update_romlist_after_edit( m_rom_original, replacement );
+
+	// Resave the usage stats (if they were changed)
+	//
+	if ( m_update_stats )
+		ctx.fe_settings.update_stats(0,0); // this will force a rewrite of the file
+
+	if ( m_update_extras )
+	{
+		ctx.fe_settings.set_game_extra( FeSettings::Executable, ctx.opt_list[border].get_value() );
+		ctx.fe_settings.set_game_extra( FeSettings::Arguments, ctx.opt_list[border+1].get_value() );
+		ctx.fe_settings.save_game_extras();
+	}
+
 	return true;
 }

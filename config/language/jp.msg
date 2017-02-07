@@ -9,7 +9,6 @@ Add Filter;フィルターを追加
 Add Input;キー追加
 Add New Display;ディスプレイを追加
 Add Rule;ルールを追加
-Add a rule to this filter;ルールー追加
 Add/Remove Favourite;お気に入り追加/削除
 Add/Remove Tags;タッグ追加/削除
 Additional Import File(s);追加入力ファイル
@@ -28,18 +27,16 @@ Collection/Rom List;Romファイルリスト
 Command;コマンド
 Command Arguments;実行パラメータ
 Comparison;ルールの比較方式
-Config / Emulators;設定 / エミュレータ
 Configure;設定
+Configure / Controls;設定 / 入力
 Configure / Displays;設定 / ディスプレイ
-Configure / Input;設定 / 入力
+Configure / Emulators;設定 / エミュレータ
 Configure / Miscellaneous;設定 / その他
 Configure / Plug-ins;設定 / プラグイン
 Configure / Scraper;設定 / オンラインゲーム情報
 Configure / Sound;設定 / サウンド
 Configure Plug-in;プラグインを設定
 Configure Screen Saver;スクリーンセーバー設定
-Configure available emulators;エミュレータの設定
-Configure filter rule;フィルターのルールー編集
 Confirm Favourites;お気に入りの確認
 Control;コントローラ(Control)
 Controls;入力
@@ -57,7 +54,6 @@ Delete this Display;このディスプレイを削除
 Delete this Emulator;エミュレータを削除
 Delete this Filter;このフィルターを削除
 Delete this Rule;このルールを削除
-Delete this filter;このフィルターを削除
 Disabled;無効
 Display Edit;ディスプレイを設定
 Display Name;ディスプレイの名前
@@ -124,8 +120,6 @@ No Wrap;何もしない
 None;0°
 OR;又は
 Overwrite existing '$1' list?;既存のRomファイルリスト '$1' に上書きしてもよろしいですか?
-Page Down;1画面下
-Page Up;1画面上
 PlayedCount;プレイ数
 PlayedTime;プレイ時間
 Players;プレイヤー数(Players)
@@ -179,7 +173,6 @@ Window;ウィンドウモード
 Window Mode;スクリーンモードー
 Wrap within Display (Default);リストの最初のフィルターに (デフォルト)
 Wrote $1 entries to Collection/Rom List;$1 個のRomファイルをリストに記録しました
-XML Mode;XML モード
 Year;発売年(Year)
 Yes;はい
 contains;含む
@@ -208,8 +201,6 @@ _help_control_next_display;次のリストに移動するキーを設定しま�
 _help_control_next_favourite;次のお気に入りゲームに移動するキーを設定します
 _help_control_next_filter;次のフィルターに移動するキーを設定します
 _help_control_next_letter;次のアルファベットに移動するキーを設定します
-_help_control_page_down;1ページ下に移動するキーを設定します
-_help_control_page_up;1ページ上に移動するキーを設定します
 _help_control_prev_display;前のリストに移動するキーを設定します
 _help_control_prev_favourite;前のお気に入りゲームに移動するキーを設定します
 _help_control_prev_filter;前のフィルターに移動するキーを設定します
@@ -297,15 +288,24 @@ _sort_regexp;^(Vs\. The |The |Vs\. )
 #
 # Extra strings provided by translation
 #
+Add a rule to this filter;ルールー追加
 Ambient Sounds;BGMファイル
+Configure available emulators;エミュレータの設定
+Configure filter rule;フィルターのルールー編集
+Delete this filter;このフィルターを削除
 Exit menu;出る
 Extra;その他(Extra)
 Launch Last Game on Startup;最後にプレイしたゲームを次の起動時 再起動
+Page Down;1画面下
+Page Up;1画面上
+XML Mode;XML モード
 en;英語
 fr;フランス語
 jp;日本語
 kr;韓国語
 _help_autolaunch_last_game;プラグラムの起動時, 最後にプレイしたゲームを一緒に起動するかを設定します
+_help_control_page_down;1ページ下に移動するキーを設定します
+_help_control_page_up;1ページ上に移動するキーを設定します
 _help_control_sel;
 _help_emu_listxml;
 
@@ -316,14 +316,31 @@ _help_emu_listxml;
 $1 Rule(s);$1 Rule(s)
 Add '$1' to Favourites?;Add '$1' to Favourites?
 Add Exception;Add Exception
+Add tag: '$1';Add tag: '$1'
+Configure Intro;Configure Intro
+Configure Layout;Configure Layout
+Create new tag;Create new tag
+Custom Arguments;Custom Arguments
+Custom Executable;Custom Executable
+Default Action;Default Action
+Delete game '$1'?;Delete game '$1'?
+Delete this Game;Delete this Game
+Edit Game;Edit Game
 Empty;Empty
 Enable Multiple Monitors;Enable Multiple Monitors
+Enter Romlist Name;Enter Romlist Name
+Enter new tag name;Enter new tag name
 Exception;Exception
 Exception Edit;Exception Edit
 Intro;Intro
 Launch Last Game;Launch Last Game
+Next Game;Next Game
+Next Page;Next Page
 Play Sound;Play Sound
+Previous Game;Previous Game
+Previous Page;Previous Page
 Remove '$1' from Favourites?;Remove '$1' from Favourites?
+Remove tag: '$1';Remove tag: '$1'
 Scrape Fanart;Scrape Fanart
 Scrape Videos (MAME only);Scrape Videos (MAME only)
 Show Displays Menu;Show Displays Menu
@@ -331,18 +348,39 @@ Show Last Selection (Default);Show Last Selection (Default)
 Show in Cycle;Show in Cycle
 Show in Menu;Show in Menu
 Startup Mode;Startup Mode
+Video Decoder;Video Decoder
+Window (No Border);Window (No Border)
+multi;multi
 _help_art;An artwork resource available for use by layouts
 _help_back;Exit menu
+_help_control_back;Set the control(s) that go back
 _help_control_custom3;Set the "Custom3" control(s)
 _help_control_custom4;Set the "Custom4" control(s)
 _help_control_custom5;Set the "Custom5" control(s)
 _help_control_custom6;Set the "Custom6" control(s)
+_help_control_edit_game;Set the control(s) to edit the current selection
+_help_control_intro;Set the control(s) that show the intro video
+_help_control_left;Set the control(s) that move the selection left
+_help_control_next_game;Set the control(s) that move to the next game
+_help_control_next_page;Set the control(s) that move the selection up one page
+_help_control_prev_game;Set the control(s) that move to the previous game
+_help_control_prev_page;Set the control(s) that move the selection down one page
+_help_control_right;Set the control(s) that move the selection right
 _help_display_in_cycle;Include this display in the "Previous Display"/"Next Display" cycle?
 _help_display_in_menu;Include this display in the "Displays Menu"?
+_help_emu_sel_gen_romlist;Generate a Collection/Romlist containing games for multiple emulators
 _help_filter_add_exception;Add an exception to this filter.  If a game matches an exception (and wasn't filtered out by an earlier rule) it will be listed in the filter
 _help_filter_exception;Configure this filter exception.  If a game matches an exception it will be listed in the filter.  Rules and exceptions get applied in the order that they are listed
+_help_game_custom_args;Set this to override the default command line arguments for this game.  Set this to [nothing] if you want to override with no parameters.  The following get substituted appropriately: [name], [romext], [rompath], [emulator], [romfilename], [system], [systemn]
+_help_game_custom_executable;Set this to override the default executable for this game
+_help_game_delete;Delete this game from the Romlist
+_help_game_edit;Edit this game information
+_help_generator_build;Generate romlist with the selected emulator(s)
+_help_generator_opt;Set whether this emulator is to be included in the generated romlist
 _help_input_action;
+_help_input_default_action;Set the default behaviour for this control
 _help_intro;Configure intro
 _help_multiple_monitors;Enable the use of multiple monitors by Attract-Mode
 _help_scrape_vids;Set whether game videos should be downloaded when scraping
 _help_startup_mode;Set what should happen when Attract-Mode first starts up
+_help_video_decoder;Configure the decoder to use for video playback (if multiple decoders are available)

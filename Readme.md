@@ -7,8 +7,7 @@ intended to be controlled with a joystick, gamepad or spin dial, making it
 ideal for use in arcade cabinet setups.
 
 Attract-Mode was originally developed for Linux.  It is known to work on
-Linux (x86, Raspberry Pi), Mac OS X (10.6.8+), and Windows (XP, 7, 32 and
-64 bit) based-systems.
+Linux (x86, x86-64, ARM, Raspberry Pi), Mac OS X and Windows based-systems.
 
 Attract-Mode is licensed under the terms of the GNU General Public License,
 version 3 or later.
@@ -200,7 +199,7 @@ emulators from the command line using the following command:
 
 You can also import romlists from mame listxml files as well as gamelists for
 other frontends.  Supported source files include: *.lst (MameWah lists), *.txt
-(Attract-Mode lists) and *.xml (Mame listxml and HyperSpin lists):
+(Attract-Mode lists) and *.xml (Mame listxml, listsoftware and HyperSpin lists):
 
 		attract --import-romlist <source_file> [emulator name]
 

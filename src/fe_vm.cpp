@@ -1,7 +1,7 @@
 /*
  *
  *  Attract-Mode frontend
- *  Copyright (C) 2014-15 Andrew Mickelson
+ *  Copyright (C) 2014-16 Andrew Mickelson
  *
  *  This file is part of Attract-Mode.
  *
@@ -358,9 +358,11 @@ void FeVM::set_overlay( FeOverlay *feo )
 	m_overlay = feo;
 }
 
-bool FeVM::poll_command( FeInputMap::Command &c, sf::Event &ev )
+bool FeVM::poll_command( FeInputMap::Command &c, sf::Event &ev, bool &from_ui )
 {
-	if ( !m_posted_commands.empty( ))
+	from_ui=false;
+
+	if ( !m_posted_commands.empty() )
 	{
 		c = (FeInputMap::Command)m_posted_commands.front();
 		m_posted_commands.pop();
@@ -370,7 +372,19 @@ bool FeVM::poll_command( FeInputMap::Command &c, sf::Event &ev )
 	}
 	else if ( m_window.pollEvent( ev ) )
 	{
+		int t = m_layoutTimer.getElapsedTime().asMilliseconds();
+
+		// Debounce to stop multiples when triggered by a key combo
+		//
+		if ( t - m_last_ui_cmd.asMilliseconds() < 30 )
+			return false;
+
 		c = m_feSettings->map_input( ev );
+
+		if ( c != FeInputMap::LAST_COMMAND )
+			m_last_ui_cmd = m_layoutTimer.getElapsedTime();
+
+		from_ui = true;
 		return true;
 	}
 
@@ -381,6 +395,7 @@ void FeVM::clear()
 {
 	FePresent::clear();
 
+	m_last_ui_cmd = sf::Time();
 	m_ticks.clear();
 	m_trans.clear();
 	m_sig_handlers.clear();
@@ -529,6 +544,7 @@ bool FeVM::on_new_layout()
 		.Enum( _SC("Art"), Enumeration()
 			.Const( _SC("Default"), AF_Default )
 			.Const( _SC("ImagesOnly"), AF_ImagesOnly )
+			.Const( _SC("FullList"), AF_FullList )
 			)
 		.Enum( _SC("Overlay"), Enumeration()
 			.Const( "Custom", 0 )
@@ -1328,9 +1344,10 @@ private:
 
 public:
 	FeConfigVM(
-			const FeScriptConfigurable &configurable,
-			const std::string &script_path,
-			const std::string &script_file )
+		const FeScriptConfigurable &configurable,
+		const std::string &script_path,
+		const std::string &script_file,
+		bool limited=false )
 	{
 		m_stored_vm = Sqrat::DefaultVM::Get();
 		FeVM *fe_vm = (FeVM *)sq_getforeignptr( m_stored_vm );
@@ -1340,15 +1357,18 @@ public:
 		sq_setprintfunc( m_vm, printFunc, printFunc );
 		sq_pushroottable( m_vm );
 
-		sqstd_register_bloblib( m_vm );
-		sqstd_register_iolib( m_vm );
-		sqstd_register_mathlib( m_vm );
-		sqstd_register_stringlib( m_vm );
-		sqstd_register_systemlib( m_vm );
-//		sqstd_seterrorhandlers( m_vm ); // don't set this on purpose
+		if ( !limited )
+		{
+			sqstd_register_bloblib( m_vm );
+			sqstd_register_iolib( m_vm );
+			sqstd_register_mathlib( m_vm );
+			sqstd_register_stringlib( m_vm );
+			sqstd_register_systemlib( m_vm );
+//			sqstd_seterrorhandlers( m_vm ); // don't set this on purpose
 
-		fe_register_global_func( m_vm, zip_extract_file, "zip_extract_file" );
-		fe_register_global_func( m_vm, zip_get_dir, "zip_get_dir" );
+			fe_register_global_func( m_vm, zip_extract_file, "zip_extract_file" );
+			fe_register_global_func( m_vm, zip_get_dir, "zip_get_dir" );
+		}
 
 		Sqrat::DefaultVM::Set( m_vm );
 
@@ -1362,37 +1382,41 @@ public:
 
 		Sqrat::Table fe;
 
-		//
-		// We only expose a very limited set of frontend functionality
-		// to scripts when they are run in the config mode
-		//
-		fe.Bind( _SC("Overlay"), Sqrat::Class <FeVM, Sqrat::NoConstructor>()
-			.Prop( _SC("is_up"), &FeVM::overlay_is_on )
-			.Overload<bool (FeVM::*)(const char *, const char *)>( _SC("splash_message"), &FeVM::splash_message )
-			.Overload<bool (FeVM::*)(const char *)>( _SC("splash_message"), &FeVM::splash_message )
-		);
+		if ( !limited )
+		{
+			//
+			// We only expose a very limited set of frontend functionality
+			// to scripts when they are run in the config mode
+			//
+			fe.Bind( _SC("Overlay"), Sqrat::Class <FeVM, Sqrat::NoConstructor>()
+				.Prop( _SC("is_up"), &FeVM::overlay_is_on )
+				.Overload<bool (FeVM::*)(const char *, const char *)>( _SC("splash_message"), &FeVM::splash_message )
+				.Overload<bool (FeVM::*)(const char *)>( _SC("splash_message"), &FeVM::splash_message )
+			);
 
-		fe.SetInstance( _SC("overlay"), fe_vm );
+			fe.SetInstance( _SC("overlay"), fe_vm );
 
-		fe.Bind( _SC("Monitor"), Sqrat::Class <FeMonitor, Sqrat::NoConstructor>()
-			.Prop( _SC("num"), &FeMonitor::get_num )
-			.Prop( _SC("width"), &FeMonitor::get_width )
-			.Prop( _SC("height"), &FeMonitor::get_height )
-		);
+			fe.Bind( _SC("Monitor"), Sqrat::Class <FeMonitor, Sqrat::NoConstructor>()
+				.Prop( _SC("num"), &FeMonitor::get_num )
+				.Prop( _SC("width"), &FeMonitor::get_width )
+				.Prop( _SC("height"), &FeMonitor::get_height )
+			);
 
-		Sqrat::Table mtab;  // hack Table to Array because creating the Array straight up doesn't work
-		fe.Bind( _SC("monitors"), mtab );
-		Sqrat::Array marray( mtab.GetObject() );
+			// hack Table to Array because creating the Array straight up doesn't work
+			Sqrat::Table mtab;
+			fe.Bind( _SC("monitors"), mtab );
+			Sqrat::Array marray( mtab.GetObject() );
 
-		for ( int i=0; i < (int)fe_vm->m_mon.size(); i++ )
-			marray.SetInstance( marray.GetSize(), &(fe_vm->m_mon[i]) );
+			for ( int i=0; i < (int)fe_vm->m_mon.size(); i++ )
+				marray.SetInstance( marray.GetSize(), &(fe_vm->m_mon[i]) );
 
-		fe.Overload<bool (*)(const char *, const char *, Sqrat::Object, const char *)>(_SC("plugin_command"), &FeVM::cb_plugin_command);
-		fe.Overload<bool (*)(const char *, const char *, const char *)>(_SC("plugin_command"), &FeVM::cb_plugin_command);
-		fe.Overload<bool (*)(const char *, const char *)>(_SC("plugin_command"), &FeVM::cb_plugin_command);
-		fe.Func<bool (*)(const char *)>(_SC("load_module"), &FeVM::load_module);
-		fe.Func<void (*)(const char *)>(_SC("do_nut"), &FeVM::do_nut);
-		fe.Func<const char* (*)(const char *)>(_SC("path_expand"), &FeVM::cb_path_expand);
+			fe.Overload<bool (*)(const char *, const char *, Sqrat::Object, const char *)>(_SC("plugin_command"), &FeVM::cb_plugin_command);
+			fe.Overload<bool (*)(const char *, const char *, const char *)>(_SC("plugin_command"), &FeVM::cb_plugin_command);
+			fe.Overload<bool (*)(const char *, const char *)>(_SC("plugin_command"), &FeVM::cb_plugin_command);
+			fe.Func<bool (*)(const char *)>(_SC("load_module"), &FeVM::load_module);
+			fe.Func<void (*)(const char *)>(_SC("do_nut"), &FeVM::do_nut);
+			fe.Func<const char* (*)(const char *)>(_SC("path_expand"), &FeVM::cb_path_expand);
+		}
 
 		Sqrat::RootTable().Bind( _SC("fe"),  fe );
 
@@ -1470,7 +1494,7 @@ void FeVM::script_get_config_options(
 	if ( !script_path.empty() )
 	{
 		FeScriptConfigurable ignored;
-		FeConfigVM config_vm( ignored, script_path, script_file );
+		FeConfigVM config_vm( ignored, script_path, script_file, true );
 
 		Sqrat::Object uConfig = Sqrat::RootTable().GetSlot( "UserConfig" );
 		if ( !uConfig.IsNull() )
@@ -1826,12 +1850,12 @@ bool FeVM::cb_get_input_state( const char *input )
 	//
 	// If not, then test based on it being an input string
 	//
-	return FeInputSource( input ).get_current_state( fev->m_feSettings->get_joy_thresh() );
+	return FeInputMapEntry( input ).get_current_state( fev->m_feSettings->get_joy_thresh() );
 }
 
 int FeVM::cb_get_input_pos( const char *input )
 {
-	return FeInputSource( input ).get_current_pos();
+	return FeInputSingle( input ).get_current_pos();
 }
 
 // return false if file not found
@@ -1968,6 +1992,7 @@ const char *FeVM::cb_get_art( const char *art, int index_offset, int filter_offs
 			fes->get_rom_index( filter_index, index_offset ) );
 
 	static std::string retval;
+	retval.clear();
 
 	std::vector<std::string> vid_list, image_list;
 	if (( rom ) &&
@@ -1978,21 +2003,48 @@ const char *FeVM::cb_get_art( const char *art, int index_offset, int filter_offs
 			image_list,
 			(art_flags&AF_ImagesOnly) ) ))
 	{
-		if ( !(art_flags&AF_ImagesOnly) &&  !vid_list.empty() )
-			retval = vid_list.front();
-		else
-			retval = image_list.front();
+		if ( art_flags&AF_FullList )
+		{
+			std::vector<std::string>::iterator itr;
+			if ( !(art_flags&AF_ImagesOnly) &&  !vid_list.empty() )
+			{
+				for ( itr=vid_list.begin(); itr!=vid_list.end(); ++itr )
+				{
+					if ( !retval.empty() )
+						retval += ";";
 
-		// We force our return value to an absolute path, to work
-		// around Attract-Mode's tendency to assume that relative
-		// paths are relative to the layout directory.
-		//
-		// We are almost certain that is not the case here...
-		//
-		retval = absolute_path( retval );
+					// see note below re: need for absolute path
+					retval += absolute_path( *itr );
+				}
+			}
+			else
+			{
+				for ( itr=image_list.begin(); itr!=image_list.end(); ++itr )
+				{
+					if ( !retval.empty() )
+						retval += ";";
+
+					// see note below re: need for absolute path
+					retval += absolute_path( *itr );
+				}
+			}
+		}
+		else
+		{
+			if ( !(art_flags&AF_ImagesOnly) &&  !vid_list.empty() )
+				retval = vid_list.front();
+			else if ( !image_list.empty() )
+				retval = image_list.front();
+
+			// We force our return value to an absolute path, to work
+			// around Attract-Mode's tendency to assume that relative
+			// paths are relative to the layout directory.
+			//
+			// We are almost certain that is not the case here...
+			//
+			retval = absolute_path( retval );
+		}
 	}
-	else
-		retval.clear();
 
 	return retval.c_str();
 }

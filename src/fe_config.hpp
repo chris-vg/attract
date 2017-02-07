@@ -1,7 +1,7 @@
 /*
  *
  *  Attract-Mode frontend
- *  Copyright (C) 2013 Andrew Mickelson
+ *  Copyright (C) 2013-2016 Andrew Mickelson
  *
  *  This file is part of Attract-Mode.
  *
@@ -55,16 +55,16 @@ namespace Opt
 class FeMenuOpt
 {
 private:
-	std::string m_edit_value;		// setting value (edit or unmatched list)
+	std::string m_edit_value;	// setting value (edit or unmatched list)
 	int m_list_index;	// selected index for list options (-1 if unmatched)
 
 public:
-	int type;					// see Opt namespace for values
-	std::string setting;		// the name of the setting
+	int type;		// see Opt namespace for values
+	std::string setting;	// the name of the setting
 	std::string help_msg;	// the help message for this option
 	std::vector<std::string> values_list; // list options
 
-	int opaque;					// private variables available to the menu to track menu options
+	int opaque;	// private variables available to the menu to track menu options
 	std::string opaque_str;
 
 	FeMenuOpt(int t,
@@ -121,11 +121,11 @@ public:
 	//
 	// set and val are added without language lookup.  help gets lookup.
 	void add_opt( int type, const std::string &set,
-				const std::string &val="", const std::string &help="" );
+		const std::string &val="", const std::string &help="" );
 
 	// set and help get language lookup
 	void add_optl( int type, const std::string &set,
-				const std::string &val="", const std::string &help="" );
+		const std::string &val="", const std::string &help="" );
 
 	// set the Style and title for the menu.
 	void set_style( Style s, const std::string &t );
@@ -139,18 +139,20 @@ public:
 	//
 	// Dialog Toolbox.  "msg" strings get translated
 	//
-	virtual void edit_dialog( const std::string &msg, std::string &text )=0;
+	virtual bool edit_dialog( const std::string &msg, std::string &text )=0;
 
 	virtual bool confirm_dialog( const std::string &msg,
-						const std::string &rep="" )=0;
+		const std::string &rep="" )=0;
 
 	virtual void splash_message( const std::string &msg,
-						const std::string &rep,
-						const std::string &aux )=0;
+		const std::string &rep,
+		const std::string &aux )=0;
 
 	virtual void input_map_dialog( const std::string &msg,
-						std::string &map_str,
-						FeInputMap::Command &conflict )=0;
+		std::string &map_str,
+		FeInputMap::Command &conflict )=0;
+
+	virtual void tags_dialog()=0;
 
 	virtual bool check_for_cancel()=0;
 };
@@ -172,7 +174,7 @@ public:
 	// Return true to proceed with option, false to cancel
 	//
 	virtual bool on_option_select( FeConfigContext &ctx,
-						FeBaseConfigMenu *& submenu );
+		FeBaseConfigMenu *& submenu );
 
 
 	// Called when leaving the menu if ctx.save_req is true (it is either
@@ -192,7 +194,7 @@ protected:
 	virtual bool save( FeConfigContext &ctx )=0;
 
 	bool on_option_select(
-			FeConfigContext &ctx, FeBaseConfigMenu *& submenu );
+		FeConfigContext &ctx, FeBaseConfigMenu *& submenu );
 
 	bool save_helper( FeConfigContext &ctx );
 
@@ -261,22 +263,34 @@ public:
 
 	void get_options( FeConfigContext &ctx );
 	bool on_option_select( FeConfigContext &ctx,
-						FeBaseConfigMenu *& submenu );
+		FeBaseConfigMenu *& submenu );
 	bool save( FeConfigContext &ctx );
 
 	void set_emulator( FeEmulatorInfo *emu, bool is_new,
-							const std::string &romlist_dir );
+		const std::string &romlist_dir );
+};
+
+class FeEmulatorGenMenu : public FeBaseConfigMenu
+{
+private:
+	std::string m_default_name;
+
+public:
+	void get_options( FeConfigContext &ctx );
+	bool on_option_select( FeConfigContext &ctx,
+		FeBaseConfigMenu *& submenu );
 };
 
 class FeEmulatorSelMenu : public FeBaseConfigMenu
 {
 private:
 	FeEmulatorEditMenu m_edit_menu;
+	FeEmulatorGenMenu m_gen_menu;
 
 public:
 	void get_options( FeConfigContext &ctx );
 	bool on_option_select( FeConfigContext &ctx,
-						FeBaseConfigMenu *& submenu );
+		FeBaseConfigMenu *& submenu );
 };
 
 class FeRuleEditMenu : public FeBaseConfigMenu
@@ -290,7 +304,7 @@ public:
 
 	void get_options( FeConfigContext &ctx );
 	bool on_option_select( FeConfigContext &ctx,
-						FeBaseConfigMenu *& submenu );
+		FeBaseConfigMenu *& submenu );
 	bool save( FeConfigContext &ctx );
 	void set_rule_index( FeFilter *f, int i );
 };
@@ -307,7 +321,7 @@ public:
 
 	void get_options( FeConfigContext &ctx );
 	bool on_option_select( FeConfigContext &ctx,
-						FeBaseConfigMenu *& submenu );
+		FeBaseConfigMenu *& submenu );
 	bool save( FeConfigContext &ctx );
 	void set_filter_index( FeDisplayInfo *d, int i );
 };
@@ -325,7 +339,7 @@ public:
 
 	void get_options( FeConfigContext &ctx );
 	bool on_option_select( FeConfigContext &ctx,
-						FeBaseConfigMenu *& submenu );
+		FeBaseConfigMenu *& submenu );
 	bool save( FeConfigContext &ctx );
 	void set_display( FeDisplayInfo *d, int index );
 };
@@ -338,7 +352,7 @@ private:
 public:
 	void get_options( FeConfigContext &ctx );
 	bool on_option_select( FeConfigContext &ctx,
-						FeBaseConfigMenu *& submenu );
+		FeBaseConfigMenu *& submenu );
 };
 
 class FeMapping;
@@ -352,7 +366,7 @@ public:
 	FeInputEditMenu();
 	void get_options( FeConfigContext &ctx );
 	bool on_option_select( FeConfigContext &ctx,
-						FeBaseConfigMenu *& submenu );
+		FeBaseConfigMenu *& submenu );
 	bool save( FeConfigContext &ctx );
 	void set_mapping( FeMapping * );
 };
@@ -366,7 +380,7 @@ private:
 public:
 	void get_options( FeConfigContext &ctx );
 	bool on_option_select( FeConfigContext &ctx,
-						FeBaseConfigMenu *& submenu );
+		FeBaseConfigMenu *& submenu );
 	bool save( FeConfigContext &ctx );
 };
 
@@ -414,7 +428,7 @@ private:
 public:
 	void get_options( FeConfigContext &ctx );
 	bool on_option_select( FeConfigContext &ctx,
-			FeBaseConfigMenu *& submenu );
+		FeBaseConfigMenu *& submenu );
 };
 
 class FeConfigMenu : public FeBaseConfigMenu
@@ -433,8 +447,25 @@ private:
 public:
 	void get_options( FeConfigContext &ctx );
 	bool on_option_select( FeConfigContext &ctx,
-						FeBaseConfigMenu *& submenu );
+		FeBaseConfigMenu *& submenu );
 	bool save( FeConfigContext &ctx );
 };
+
+class FeEditGameMenu : public FeBaseConfigMenu
+{
+private:
+	FeRomInfo m_rom_original;
+	bool m_update_rl;
+	bool m_update_stats;
+	bool m_update_extras;
+
+public:
+	void get_options( FeConfigContext &ctx );
+	bool on_option_select( FeConfigContext &ctx,
+		FeBaseConfigMenu *& submenu );
+
+	bool save( FeConfigContext &ctx );
+};
+
 
 #endif

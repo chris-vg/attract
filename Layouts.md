@@ -692,8 +692,7 @@ Return Value:
     fe.get_art( label, index_offset, filter_offset )
     fe.get_art( label, index_offset, filter_offset, flags )
 
-Get the filename of an artwork for the selected game.  If multiple files are
-matched, one is chosen randomly and returned.
+Get the filename of an artwork for the selected game.
 
 Parameters:
 
@@ -709,9 +708,13 @@ Parameters:
      containing the selection to retrieve the filename for.  i.e.
      -1=previous filter, 0=current filter.  Default value is 0.
    * flags - flags to control the filename that gets returned.  Can be set
-     to either of the following:
-      - `Art.Default`
-      - `Art.ImageOnly` (only return an image match, no videos)
+     to any combination of none or more of the following (i.e. `Art.ImageOnly
+     | Art.FullList`):
+      - `Art.Default` - return single match, video or image
+      - `Art.ImageOnly` - Override Art.Default, only return an image match (no
+        video)
+      - `Art.FullList` - Return a full list of the matches made (if multiples
+        available).  Names are returned in a single string, semicolon separated
 
 Return Value:
 
@@ -776,13 +779,18 @@ Parameters:
 
    * signal_str - the action to signal for.  Can be one of the
      following strings:
-      - "select"
+      - "back"
       - "up"
       - "down"
-      - "page_up"
-      - "page_down"
-      - "prev_list"
-      - "next_list"
+      - "left"
+      - "right"
+      - "select"
+      - "prev_game"
+      - "next_game"
+      - "prev_page"
+      - "next_page"
+      - "prev_display"
+      - "next_display"
       - "displays_menu"
       - "prev_filter"
       - "next_filter"
@@ -1152,8 +1160,8 @@ Properties:
       - `RotateScreen.Right`
       - `RotateScreen.Flip`
       - `RotateScreen.Left`
-   * `page_size` - Get/set the number of entries to jump each time the "Page
-     Up" or "Page Down" button is pressed.
+   * `page_size` - Get/set the number of entries to jump each time the "Next
+     Page" or "Previous Page" button is pressed.
    * `preserve_aspect_ratio` - Get/set whether the overall layout aspect ratio
      should be preserved by the frontend.  Default value is false.
    * `time` - Get the number of millseconds that the layout has been showing.

@@ -1,7 +1,7 @@
 /*
  *
  *  Attract-Mode frontend
- *  Copyright (C) 2013-2014 Andrew Mickelson
+ *  Copyright (C) 2013-2016 Andrew Mickelson
  *
  *  This file is part of Attract-Mode.
  *
@@ -102,7 +102,7 @@ void FeWindow::onCreate()
 #ifdef SFML_SYSTEM_WINDOWS
 	int left, top, width, height;
 	if (( m_fes.get_info_bool( FeSettings::MultiMon ) )
-		&& ( m_fes.get_window_mode() != FeSettings::Window ))
+		&& ( !is_windowed_mode( m_fes.get_window_mode() ) ))
 	{
 		left = GetSystemMetrics( SM_XVIRTUALSCREEN );
 		top = GetSystemMetrics( SM_YVIRTUALSCREEN );
@@ -117,11 +117,22 @@ void FeWindow::onCreate()
 		height = getSize().y;
 	}
 
-	// In Windows, the "WS_POPUP" style creates grief switching to MAME.
-	// Use the "WS_BORDER" style to fix this...
-	//
 	sf::WindowHandle hw = getSystemHandle();
-	if ( ( GetWindowLong( hw, GWL_STYLE ) & WS_POPUP ) != 0 )
+
+	//
+	// The "WS_POPUP" style can cause grief switching to MAME.  It also looks clunky/flickery
+	// when transitioning between frontend and emulator.
+	//
+	// With Windows 10 v1607, it seems that the "WS_POPUP" style is required in order for a
+	// window to be drawn over the taskbar.
+	//
+	// So we keep WS_POPUP for "Fullscreen Mode", because the user wants to force full screen
+	// with that setting.
+	//
+	// In "Fill screen" and "Window" modes, we use the WS_BORDER style for smoother transitions.
+	//
+	if (( m_fes.get_window_mode() != FeSettings::Fullscreen )
+		&& (( GetWindowLong( hw, GWL_STYLE ) & WS_POPUP ) != 0 ))
 	{
 		SetWindowLong( hw, GWL_STYLE,
 			WS_BORDER | WS_CLIPCHILDREN | WS_CLIPSIBLINGS );
@@ -132,6 +143,7 @@ void FeWindow::onCreate()
 		width += 2;
 		height += 2;
 	}
+
 	SetWindowPos(hw, HWND_TOP, left, top,
 		width, height, SWP_FRAMECHANGED);
 
@@ -163,11 +175,12 @@ void FeWindow::onCreate()
 
 void FeWindow::initial_create()
 {
-	int style_map[3] =
+	int style_map[4] =
 	{
 		sf::Style::None,			// FeSettings::Default
 		sf::Style::Fullscreen,	// FeSettings::Fullscreen
-		sf::Style::Default		// FeSettings::Window
+		sf::Style::Default,		// FeSettings::Window
+		sf::Style::None			// FeSettings::WindowNoBorder
 	};
 
 	int win_mode = m_fes.get_window_mode();
@@ -178,7 +191,7 @@ void FeWindow::initial_create()
 		"Attract-Mode",
 		style_map[ win_mode ] );
 
-	if ( win_mode == FeSettings::Window )
+	if ( is_windowed_mode( win_mode ) )
 	{
 		FeWindowPosition win_pos(
 			sf::Vector2i( 0, 0 ),
@@ -207,8 +220,6 @@ void FeWindow::initial_create()
 
 bool FeWindow::run()
 {
-	int min_run;
-
 #ifndef SFML_SYSTEM_MACOS
 	// Don't move so much to the corner on Macs due to hot corners
 	//
@@ -233,14 +244,11 @@ bool FeWindow::run()
 	// from running...  So we close our main window each time we run
 	// an emulator and then recreate it when the emulator is done.
 	//
+	bool recreate_window=false;
 	if ( m_fes.get_window_mode() == FeSettings::Fullscreen )
 	{
 		close();
-		m_fes.run( min_run );
-		sf::VideoMode mode = sf::VideoMode::getDesktopMode();
-		create( mode, "Attract-Mode", sf::Style::Fullscreen );
-
-		return true;
+		recreate_window=true;
 	}
 #endif
 
@@ -252,6 +260,7 @@ bool FeWindow::run()
 	// and we wait at least this amount of time (in seconds) and then wait
 	// for focus to return to Attract-Mode if this value is set greater than 0
 	//
+	int min_run;
 	m_fes.run( min_run );
 
 	if ( min_run > 0 )
@@ -282,10 +291,15 @@ bool FeWindow::run()
 		}
 	}
 
-#ifdef SFML_SYSTEM_MACOS
+#if defined(SFML_SYSTEM_LINUX)
+	if ( recreate_window )
+	{
+		sf::VideoMode mode = sf::VideoMode::getDesktopMode();
+		create( mode, "Attract-Mode", sf::Style::Fullscreen );
+	}
+#elif defined(SFML_SYSTEM_MACOS)
 	osx_take_focus();
-#endif
-#ifdef SFML_SYSTEM_WINDOWS
+#elif defined(SFML_SYSTEM_WINDOWS)
 	SetForegroundWindow( getSystemHandle() );
 #endif
 
@@ -305,7 +319,7 @@ bool FeWindow::run()
 
 void FeWindow::on_exit()
 {
-	if ( m_fes.get_window_mode() == FeSettings::Window )
+	if ( is_windowed_mode( m_fes.get_window_mode() ) )
 	{
 		FeWindowPosition win_pos( getPosition(), getSize() );
 		win_pos.save( m_fes.get_config_dir() + FeWindowPosition::FILENAME );

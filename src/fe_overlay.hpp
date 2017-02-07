@@ -1,7 +1,7 @@
 /*
  *
  *  Attract-Mode frontend
- *  Copyright (C) 2013 Andrew Mickelson
+ *  Copyright (C) 2013-2016 Andrew Mickelson
  *
  *  This file is part of Attract-Mode.
  *
@@ -58,6 +58,7 @@ private:
 			FeInputMap::Command &conflict );
 	int display_config_dialog( FeBaseConfigMenu *, bool & );
 
+	void init_event_loop( FeEventLoopCtx & );
 	bool event_loop( FeEventLoopCtx & );
 
 	bool edit_loop( std::vector<sf::Drawable *> draw_list,
@@ -75,6 +76,7 @@ public:
 		FeInputMap::Command extra_exit=FeInputMap::LAST_COMMAND );
 
 	bool config_dialog();
+	bool edit_game_dialog();
 	int languages_dialog();
 	int tags_dialog();
 
@@ -92,7 +94,7 @@ public:
 		int cancel_sel,
 		FeInputMap::Command extra_exit=FeInputMap::LAST_COMMAND );
 
-	void edit_dialog( const std::string &msg_str, std::string &text );
+	bool edit_dialog( const std::string &msg_str, std::string &text );
 
 	bool overlay_is_on() const { return m_overlay_is_on; };
 

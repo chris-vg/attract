@@ -10,7 +10,6 @@ Add Filter;Filter hinzufügen
 Add Input;Steuerung hinzufügen
 Add New Display;Neuen Bildschirm hinzufügen
 Add Rule;Regel hinzufügen
-Add a rule to this filter;Diesem Filter eine Regel hinzufügen
 Add/Remove Favourite;Favorit hinzufügen/löschen
 Add/Remove Tags;Markierungen hinzufügen/löschen
 Additional Import File(s);Zusätzliche Import Datei(en)
@@ -29,18 +28,16 @@ Collection/Rom List;Sammlung/Romliste
 Command;Kommando
 Command Arguments;Kommandozeilenargumente
 Comparison;Vergleich
-Config / Emulators;Konfiguration / Emulator(en)
 Configure;Konfiguration
+Configure / Controls;Konfiguration / Steuerung
 Configure / Displays;Konfiguration / Bildschirme
-Configure / Input;Konfiguration / Steuerung
+Configure / Emulators;Konfiguration / Emulator(en)
 Configure / Miscellaneous;Konfiguration / Verschiedenes
 Configure / Plug-ins;Konfiguration / Plug-ins
 Configure / Scraper;Konfiguration / Scraper
 Configure / Sound;Konfiguration / Klang
 Configure Plug-in;Konfiguriere Plug-in
 Configure Screen Saver;Bildschirmschoner konfigurieren
-Configure available emulators;Verfügbare Emulatoren konfigurieren
-Configure filter rule;Filterregel konfigurieren
 Confirm Favourites;Favoriten bestätigen
 Control;Steuerung
 Controls;Steuerungen
@@ -58,7 +55,6 @@ Delete this Display;Diesen Bildschirm löschen
 Delete this Emulator;Diesen Emulator löschen
 Delete this Filter;Diesen Filter löschen
 Delete this Rule;Diese Regel löschen
-Delete this filter;Diesen Filter löschen
 Disabled;ausgeschaltet
 Display Edit;Bildschirm bearbeiten
 DisplayCount;Anzahl Bildschirme
@@ -118,14 +114,13 @@ Next Display;Nächster Bildschirm
 Next Favourite;Nächster Favorit
 Next Filter;Nächster Filter
 Next Letter;Nächster Buchstabe
+Next Page;Seite zurück
 No;Nein
 No Sort;Keine Sortierung
 No Wrap;Kein Rollieren
 None;Keine
 OR;ODER
 Overwrite existing '$1' list?;Existierende Romliste '$1' überschreiben?
-Page Down;Seite zurück
-Page Up;Seite vor
 Play Sound;Klang abspielen
 PlayedCount;Male gespielt
 PlayedTime;Zeit gespielt
@@ -136,6 +131,7 @@ Previous Display;Vorheriger Bildschirm
 Previous Favourite;Voriger Favorit
 Previous Filter;Vorheriger Filter
 Previous Letter;Voriger Buchstabe
+Previous Page;Seite vor
 Random Game;Zufälliges Spiel
 Remove Input;Steuerung löschen
 Replay Last Game;Letztes Spiel wiederholen
@@ -180,7 +176,6 @@ Window;Fenster
 Window Mode;Fenstermodus
 Wrap within Display (Default);Rollieren innerhalb der Liste (Standard)
 Wrote $1 entries to Collection/Rom List;$1 Einträge zur Romliste hinzugefügt
-XML Mode;XML-Modus
 Year;Jahr
 Yes;Ja
 contains;enthält
@@ -211,12 +206,12 @@ _help_control_next_display;Definiere die Taste(n), um zum nächsten Bildschirm z
 _help_control_next_favourite;Definiere die Taste(n), um zum nächsten Favoriten zu springen
 _help_control_next_filter;Definiere die Taste(n), um zum nächsten Filter zu springen
 _help_control_next_letter;Definiere die Taste(n), um zum nächsten Buchstaben zu springen
-_help_control_page_down;Definiere die Taste(n), um die Auswahl eine Seite nach unten zu bewegen
-_help_control_page_up;Definiere die Taste(n), um die Auswahl eine Seite nach oben zu bewegen
+_help_control_next_page;Definiere die Taste(n), um die Auswahl eine Seite nach unten zu bewegen
 _help_control_prev_display;Definiere die Taste(n), um zum vorigen Bildschirm zu springen
 _help_control_prev_favourite;Definiere die Taste(n), um zum vorigen Favoriten zu springen
 _help_control_prev_filter;Definiere die Taste(n), um zum vorigen Filter zu springen
 _help_control_prev_letter;Definiere die Taste(n), um zum vorigen Buchstaben zu springen
+_help_control_prev_page;Definiere die Taste(n), um die Auswahl eine Seite nach oben zu bewegen
 _help_control_random_game;Definiere die Taste(n), die ein zufälliges Spiel aus der aktuellen Liste wählen
 _help_control_replay_last_game;Definiere die Taste(n), die das zuletzt gespielte Spiel erneut starten
 _help_control_screen_saver;Definiere die Taste(n), die den Bildschirmschoner starten
@@ -302,13 +297,18 @@ _sort_regexp;^(Vs\. The |The |Vs\. )
 #
 # Extra strings provided by translation
 #
+Add a rule to this filter;Diesem Filter eine Regel hinzufügen
 Ambient Sounds;Umgebungs-Klänge
 Basic Movie;Basis Video
+Configure available emulators;Verfügbare Emulatoren konfigurieren
+Configure filter rule;Filterregel konfigurieren
+Delete this filter;Diesen Filter löschen
 Image collage;Bilder Collage
 Launch Last Game on Startup;Letztes Spiel beim Starten ausführen
 Movie collage;Video Collage
 Overlay Artwork;Bilddatei als Overlay
 Preserve Aspect Ratio;Seitenverhältnis beibehalten
+XML Mode;XML-Modus
 de;Deutsch
 en;English
 es;Español
@@ -321,14 +321,29 @@ _help_autolaunch_last_game;Beim Hochfahren automatisch das zuletzt gespielte Spi
 #
 Add '$1' to Favourites?;Add '$1' to Favourites?
 Add Exception;Add Exception
+Add tag: '$1';Add tag: '$1'
+Configure Intro;Configure Intro
+Configure Layout;Configure Layout
+Create new tag;Create new tag
+Custom Arguments;Custom Arguments
+Custom Executable;Custom Executable
+Default Action;Default Action
+Delete game '$1'?;Delete game '$1'?
+Delete this Game;Delete this Game
 Display Name;Display Name
+Edit Game;Edit Game
 Enable Multiple Monitors;Enable Multiple Monitors
+Enter Romlist Name;Enter Romlist Name
+Enter new tag name;Enter new tag name
 Exception;Exception
 Exception Edit;Exception Edit
 FileIsAvailable;FileIsAvailable
 Intro;Intro
 Launch Last Game;Launch Last Game
+Next Game;Next Game
+Previous Game;Previous Game
 Remove '$1' from Favourites?;Remove '$1' from Favourites?
+Remove tag: '$1';Remove tag: '$1'
 Scrape Fanart;Scrape Fanart
 Scrape Videos (MAME only);Scrape Videos (MAME only)
 Show Displays Menu;Show Displays Menu
@@ -336,14 +351,33 @@ Show Last Selection (Default);Show Last Selection (Default)
 Show in Cycle;Show in Cycle
 Show in Menu;Show in Menu
 Startup Mode;Startup Mode
+Video Decoder;Video Decoder
+Window (No Border);Window (No Border)
+multi;multi
+_help_control_back;Set the control(s) that go back
 _help_control_custom3;Set the "Custom3" control(s)
 _help_control_custom4;Set the "Custom4" control(s)
 _help_control_custom5;Set the "Custom5" control(s)
 _help_control_custom6;Set the "Custom6" control(s)
+_help_control_edit_game;Set the control(s) to edit the current selection
+_help_control_intro;Set the control(s) that show the intro video
+_help_control_left;Set the control(s) that move the selection left
+_help_control_next_game;Set the control(s) that move to the next game
+_help_control_prev_game;Set the control(s) that move to the previous game
+_help_control_right;Set the control(s) that move the selection right
 _help_display_in_cycle;Include this display in the "Previous Display"/"Next Display" cycle?
 _help_display_in_menu;Include this display in the "Displays Menu"?
+_help_emu_sel_gen_romlist;Generate a Collection/Romlist containing games for multiple emulators
 _help_filter_add_exception;Add an exception to this filter.  If a game matches an exception (and wasn't filtered out by an earlier rule) it will be listed in the filter
 _help_filter_exception;Configure this filter exception.  If a game matches an exception it will be listed in the filter.  Rules and exceptions get applied in the order that they are listed
+_help_game_custom_args;Set this to override the default command line arguments for this game.  Set this to [nothing] if you want to override with no parameters.  The following get substituted appropriately: [name], [romext], [rompath], [emulator], [romfilename], [system], [systemn]
+_help_game_custom_executable;Set this to override the default executable for this game
+_help_game_delete;Delete this game from the Romlist
+_help_game_edit;Edit this game information
+_help_generator_build;Generate romlist with the selected emulator(s)
+_help_generator_opt;Set whether this emulator is to be included in the generated romlist
+_help_input_default_action;Set the default behaviour for this control
 _help_language;Select the language to use in Attract-Mode's user interface
 _help_multiple_monitors;Enable the use of multiple monitors by Attract-Mode
 _help_startup_mode;Set what should happen when Attract-Mode first starts up
+_help_video_decoder;Configure the decoder to use for video playback (if multiple decoders are available)

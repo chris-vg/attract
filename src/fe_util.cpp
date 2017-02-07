@@ -1,7 +1,7 @@
 /*
  *
  *  Attract-Mode frontend
- *  Copyright (C) 2013-15 Andrew Mickelson
+ *  Copyright (C) 2013-16 Andrew Mickelson
  *
  *  This file is part of Attract-Mode.
  *
@@ -39,6 +39,7 @@
 #include <dirent.h>
 
 #include <SFML/Config.hpp>
+#include <SFML/System/Sleep.hpp>
 
 #ifdef USE_LIBARCHIVE
 #include <zlib.h>
@@ -53,7 +54,7 @@
 #include <sys/wait.h>
 #include <pwd.h>
 #include <signal.h>
-#include <SFML/System/Sleep.hpp>
+#include <errno.h>
 #endif
 
 #ifdef SFML_SYSTEM_MACOS
@@ -695,22 +696,18 @@ bool config_str_to_bool( const std::string &s )
 
 const char *get_OS_string()
 {
-#ifdef SFML_SYSTEM_WINDOWS
+#if defined(SFML_SYSTEM_WINDOWS)
 	return "Windows";
-#else
- #ifdef SFML_SYSTEM_MACOS
+#elif defined(SFML_SYSTEM_MACOS)
 	return "OSX";
- #else
-  #ifdef SFML_SYSTEM_FREEBSD
+#elif defined(SFML_SYSTEM_FREEBSD)
 	return "FreeBSD";
-  #else
-   #ifdef SFML_SYSTEM_LINUX
+#elif defined(SFML_SYSTEM_LINUX)
 	return "Linux";
-   #else
+#elif defined(SFML_SYSTEM_ANDROID)
+	return "Android";
+#else
 	return "Unknown";
-   #endif
-  #endif
- #endif
 #endif
 }
 
@@ -817,7 +814,7 @@ bool run_program( const std::string &prog,
 	DWORD timeout = ( callback || exit_hotkey.empty() )
 		? INFINITE : POLL_FOR_EXIT_MS;
 
-	FeInputSource exit_is( exit_hotkey );
+	FeInputMapEntry exit_is( exit_hotkey );
 
 	bool keep_wait=block;
 	while (keep_wait)
@@ -847,6 +844,7 @@ bool run_program( const std::string &prog,
 			if ( exit_is.get_current_state( joy_thresh ) )
 			{
 				TerminateProcess( pi.hProcess, 0 );
+
 				keep_wait=false;
 			}
 			break;
@@ -943,24 +941,40 @@ bool run_program( const std::string &prog,
 		{
 			int status;
 			int opt = exit_hotkey.empty() ? 0 : WNOHANG; // option for waitpid.  0= wait for process to complete, WNOHANG=return right away
-			FeInputSource exit_is( exit_hotkey );
 
-			do
+			FeInputMapEntry exit_is( exit_hotkey );
+
+			while (1)
 			{
-				if ( waitpid( pid, &status, opt ) == 0 )
+				pid_t w = waitpid( pid, &status, opt );
+				if ( w == 0 )
 				{
 					// waitpid should only return 0 if WNOHANG is used and the child is still running, so we
 					// should only ever get here if there is an exit_hotkey provided
 					//
 					if ( exit_is.get_current_state( joy_thresh ) )
 					{
-						kill( pid, SIGTERM );
+						// Where the user has configured the "exit hotkey" in Attract-Mode to the same key as the emulator
+						// uses to exit, we often have a problem of losing focus.  Delaying a bit and testing to make sure
+						// the emulator process is still running before sending the kill signal seems to help...
+						//
+						sf::sleep( sf::milliseconds( 100 ) );
+						if ( kill( pid, 0 ) == 0 )
+							kill( pid, SIGTERM );
+
 						break; // leave do/while loop
 					}
-
 					sf::sleep( sf::milliseconds( POLL_FOR_EXIT_MS ) );
 				}
-			} while ( !WIFEXITED( status ) && !WIFSIGNALED( status ) );
+				else
+				{
+					if ( w < 0 )
+						std::cerr << " ! error returned by wait_pid(): "
+							<< strerror( errno ) << std::endl;
+
+					break; // leave do/while loop
+				}
+			}
 		}
 	}
 #endif // SFML_SYSTEM_WINDOWS
@@ -1055,28 +1069,18 @@ void get_xinerama_geometry( int &x, int &y, int &width, int &height )
 }
 #endif
 
-void preinit_helper()
-{
 #ifdef SFML_SYSTEM_WINDOWS
-	if ( !have_console() )
+void hide_console()
+{
+	STARTUPINFO si = { sizeof(STARTUPINFO) };
+	GetStartupInfo(&si);
+	if ( si.dwFlags && !(si.dwFlags & STARTF_USESTDHANDLES ) )
 	{
 		HWND handle = GetConsoleWindow();
 		ShowWindow(handle, SW_HIDE);
 	}
-#endif
 }
-
-bool have_console()
-{
-#ifdef SFML_SYSTEM_WINDOWS
-	static STARTUPINFO startup_info = { sizeof(STARTUPINFO) };
-	GetStartupInfo(&startup_info);
-	if (startup_info.dwFlags && !(startup_info.dwFlags & STARTF_USESTDHANDLES)) {
-		return false;
-	}
 #endif
-	return true;
-}
 
 std::string url_escape( const std::string &raw )
 {
@@ -1147,3 +1151,36 @@ void string_to_vector( const std::string &input,
 
 	} while ( pos < input.size() );
 }
+
+bool line_to_setting_and_value( const std::string &line,
+	std::string &setting,
+	std::string &value,
+	const char *sep )
+{
+	// skip opening whitespace on line
+	size_t pos = line.find_first_not_of( FE_WHITESPACE );
+	if ( pos != std::string::npos )
+	{
+		size_t end = line.find_first_of( sep, pos );
+		std::string tmp_setting;
+
+		if ( end == std::string::npos )
+			tmp_setting = line.substr( pos );
+		else
+			tmp_setting = line.substr( pos, end - pos );
+
+		// skip comments
+		if (( tmp_setting.size() > 0 ) && (tmp_setting[0] != '#' ))
+		{
+			pos = line.find_first_not_of( FE_WHITESPACE, end + 1 );
+			end = line.find_last_not_of( FE_WHITESPACE );
+			if ( pos != std::string::npos )
+				value = line.substr( pos, end - pos + 1 );
+
+			setting.swap( tmp_setting );
+			return true;
+		}
+	}
+	return false;
+}
+

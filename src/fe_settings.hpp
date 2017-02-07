@@ -1,7 +1,7 @@
 /*
  *
  *  Attract-Mode frontend
- *  Copyright (C) 2013-15 Andrew Mickelson
+ *  Copyright (C) 2013-16 Andrew Mickelson
  *
  *  This file is part of Attract-Mode.
  *
@@ -86,7 +86,7 @@ public:
 		ScreenSaver_Showing
 	};
 
-	enum WindowType { Default=0, Fullscreen, Window };
+	enum WindowType { Default=0, Fullscreen, Window, WindowNoBorder };
 	static const char *windowModeTokens[];
 	static const char *windowModeDispTokens[];
 
@@ -124,11 +124,21 @@ public:
 		ScrapeWheels,
 		ScrapeFanArt,
 		ScrapeVids,
+#ifdef SFML_SYSTEM_WINDOWS
+		HideConsole,
+#endif
+		VideoDecoder,
 		LAST_INDEX
 	};
 
 	static const char *configSettingStrings[];
 	static const char *otherSettingStrings[];
+
+	enum GameExtra
+	{
+		Executable =0, // custom executable to override the configured emulator executable
+		Arguments      // custom arguments to override the configured emulator arguments
+	};
 
 private:
 	std::string m_config_path;
@@ -144,6 +154,7 @@ private:
 	std::vector<FeRomInfo *> m_current_search;
 	std::vector<int> m_display_cycle; // display indices to show in cycle
 	std::vector<int> m_display_menu; // display indices to show in menu
+	std::map<GameExtra,std::string> m_game_extras; // "extra" rom settings for the current rom
 	FeRomList m_rl;
 
 	FeInputMap m_inputmap;
@@ -179,6 +190,10 @@ private:
 	bool m_scrape_wheels;
 	bool m_scrape_fanart;
 	bool m_scrape_vids;
+#ifdef SFML_SYSTEM_WINDOWS
+	bool m_hide_console;
+#endif
+	bool m_loaded_game_extras;
 	enum FePresentState m_present_state;
 
 	FeSettings( const FeSettings & );
@@ -218,7 +233,13 @@ public:
 	void save_state();
 
 	FeInputMap::Command map_input( const sf::Event &e );
-	bool config_map_input( const sf::Event &e, std::string &s, FeInputMap::Command &conflict );
+
+	void get_input_config_metrics( sf::IntRect &mousecap_rect, int &joy_thresh );
+	FeInputMap::Command input_conflict_check( const FeInputMapEntry &e );
+
+	// for use with Up, Down, Left, Right, Back commands to get what they are actually mapped to
+	FeInputMap::Command get_default_command( FeInputMap::Command );
+	void set_default_command( FeInputMap::Command c, FeInputMap::Command v );
 
 	bool get_current_state( FeInputMap::Command c );
 	void get_input_mappings( std::vector < FeMapping > &l ) const { m_inputmap.get_mappings( l ); };
@@ -303,6 +324,10 @@ public:
 	//
 	FePresentState get_present_state() const { return m_present_state; };
 	void set_present_state( FePresentState s ) { m_present_state=s; };
+
+#ifdef SFML_SYSTEM_WINDOWS
+	bool get_hide_console() const { return m_hide_console; };
+#endif
 
 	enum FePathType
 	{
@@ -391,17 +416,41 @@ public:
 		FeFilter &filter,
 		bool full );
 
+	//
+	// Save an updated rom in the current romlist file (used with "Edit Game" command)
+	// original is assumed to be the currently selected rom
+	//
+	void update_romlist_after_edit(
+		const FeRomInfo &original,		// original rom values
+		const FeRomInfo &replacement,		// new rom values
+		bool erase=false );			// if true, erase original instead
+
+	void update_stats( int count_incr, int time_incr );
+
+	//
+	// The frontend maintains extra per game settings/extra info
+	//
+	// This info is only ever loaded for the currently selected game, and is not intended
+	// to be used in a filter
+	//
+	std::string get_game_extra( GameExtra id );
+	void set_game_extra( GameExtra id, const std::string &value );
+	void save_game_extras();
+
 	// This function implements the config-mode romlist generation
 	// A romlist named "<emu_name>.txt" is created in the romlist dir,
 	// overwriting any previous list of this name.
 	//
 	typedef bool (*UiUpdate) ( void *, int, const std::string & );
-	bool build_romlist( const std::string &emu_name, UiUpdate, void *, std::string & );
+	bool build_romlist( const std::vector < std::string > &emu_name, const std::string &out_filename,
+		UiUpdate, void *, std::string & );
 	bool scrape_artwork( const std::string &emu_name, UiUpdate uiu, void *uid, std::string &msg );
 
 	FeEmulatorInfo *get_emulator( const std::string & );
 	FeEmulatorInfo *create_emulator( const std::string & );
 	void delete_emulator( const std::string & );
+
+	void get_list_of_emulators( std::vector<std::string> &emu_list );
 
 	//
 	// Functions used for configuration
@@ -439,6 +488,11 @@ public:
 		const std::string &path,
 		std::vector<std::string> &names_list );
 };
+
+inline bool is_windowed_mode( int m )
+{
+	return (( m == FeSettings::Window ) || ( m == FeSettings::WindowNoBorder ));
+}
 
 //
 // Utility function used to collect artwork files with 'target_name' from

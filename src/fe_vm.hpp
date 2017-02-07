@@ -1,7 +1,7 @@
 /*
  *
  *  Attract-Mode frontend
- *  Copyright (C) 2014 Andrew Mickelson
+ *  Copyright (C) 2014-2016 Andrew Mickelson
  *
  *  This file is part of Attract-Mode.
  *
@@ -90,6 +90,7 @@ private:
 	bool m_redraw_triggered;
 	const FeScriptConfigurable *m_script_cfg;
 	int m_script_id;
+	sf::Time m_last_ui_cmd;
 
 	std::queue< FeInputMap::Command > m_posted_commands;
 	std::vector< FeCallback > m_ticks;
@@ -114,7 +115,7 @@ public:
 	void set_overlay( FeOverlay *feo );
 
 	void flag_redraw() { m_redraw_triggered = true; };
-	bool poll_command( FeInputMap::Command &c, sf::Event &ev );
+	bool poll_command( FeInputMap::Command &c, sf::Event &ev, bool &from_ui );
 	void clear(); // override of base class clear()
 
 	// Scripting functionality
@@ -205,7 +206,13 @@ public:
 	static const char *cb_game_info(int,int);
 	static const char *cb_game_info(int);
 
-	enum ArtFlags { AF_Default=0,AF_ImagesOnly=1,AF_IncludeLayout=2 };
+	enum ArtFlags
+	{
+		AF_Default=0,
+		AF_ImagesOnly=1,
+		AF_IncludeLayout=2,
+		AF_FullList=4
+	};
 	static const char *cb_get_art( const char *,int,int,int);
 	static const char *cb_get_art( const char *,int,int);
 	static const char *cb_get_art( const char *,int);

@@ -1,7 +1,7 @@
 /*
  *
  *  Attract-Mode frontend
- *  Copyright (C) 2013 Andrew Mickelson
+ *  Copyright (C) 2013-16 Andrew Mickelson
  *
  *  This file is part of Attract-Mode.
  *
@@ -42,7 +42,7 @@ public:
 	int exit_sel;
 
 	FeConfigContextImp( FeSettings &fes, FeOverlay &feo );
-	void edit_dialog( const std::string &m, std::string &t );
+	bool edit_dialog( const std::string &m, std::string &t );
 
 	bool confirm_dialog( const std::string &m,
 		const std::string &rep );
@@ -55,6 +55,8 @@ public:
 		std::string &ms,
 		FeInputMap::Command &conflict );
 
+	void tags_dialog();
+
 	void update_to_menu( FeBaseConfigMenu *m );
 
 	bool check_for_cancel();
@@ -65,11 +67,11 @@ FeConfigContextImp::FeConfigContextImp( FeSettings &fes, FeOverlay &feo )
 {
 }
 
-void FeConfigContextImp::edit_dialog( const std::string &m, std::string &t )
+bool FeConfigContextImp::edit_dialog( const std::string &m, std::string &t )
 {
 	std::string trans;
 	fe_settings.get_resource( m, trans );
-	m_feo.edit_dialog( trans, t );
+	return m_feo.edit_dialog( trans, t );
 }
 
 bool FeConfigContextImp::confirm_dialog( const std::string &msg,
@@ -93,6 +95,11 @@ void FeConfigContextImp::input_map_dialog( const std::string &m,
 	std::string t;
 	fe_settings.get_resource( m, t );
 	m_feo.input_map_dialog( t, ms, conflict );
+}
+
+void FeConfigContextImp::tags_dialog()
+{
+	m_feo.tags_dialog();
 }
 
 void FeConfigContextImp::update_to_menu(
@@ -123,14 +130,15 @@ class FeEventLoopCtx
 {
 public:
 	FeEventLoopCtx(
-			const std::vector<sf::Drawable *> &in_draw_list,
-			int &in_sel, int in_default_sel, int in_max_sel );
+		const std::vector<sf::Drawable *> &in_draw_list,
+		int &in_sel, int in_default_sel, int in_max_sel );
 
 	const std::vector<sf::Drawable *> &draw_list; // [in] draw list
 	int &sel;				// [in,out] selection counter
 	int default_sel;	// [in] default selection
 	int max_sel;		// [in] maximum selection
 
+	int move_count;
 	sf::Event move_event;
 	sf::Clock move_timer;
 	FeInputMap::Command move_command;
@@ -144,6 +152,7 @@ FeEventLoopCtx::FeEventLoopCtx(
 	sel( in_sel ),
 	default_sel( in_default_sel ),
 	max_sel( in_max_sel ),
+	move_count( 0 ),
 	move_command( FeInputMap::LAST_COMMAND ),
 	extra_exit( FeInputMap::LAST_COMMAND )
 {
@@ -317,6 +326,7 @@ int FeOverlay::common_list_dialog(
 
 		m_fePresent.on_transition( ShowOverlay, var );
 
+		init_event_loop( c );
 		while ( event_loop( c ) == false )
 		{
 			m_fePresent.on_transition( NewSelOverlay, sel );
@@ -385,6 +395,7 @@ int FeOverlay::common_list_dialog(
 		if ( fm.flag_set() )
 			m_fePresent.on_transition( ShowOverlay, var );
 
+		init_event_loop( c );
 		while ( event_loop( c ) == false )
 		{
 			if ( fm.flag_set() )
@@ -490,6 +501,7 @@ int FeOverlay::languages_dialog()
 	FeEventLoopCtx c( draw_list, sel, -1, ll.size() - 1 );
 	FeFlagMinder fm( m_overlay_is_on );
 
+	init_event_loop( c );
 	while ( event_loop( c ) == false )
 		dialog.setLanguageText( sel, ll, &m_fePresent );
 
@@ -548,8 +560,11 @@ int FeOverlay::tags_dialog()
 
 	if ( sel == (int)tags_list.size() )
 	{
+		std::string title;
+		m_feSettings.get_resource( "Enter new tag name", title );
+
 		std::string name;
-		edit_dialog( "Enter new tag name", name );
+		edit_dialog( title, name );
 
 		if ( !name.empty() )
 		{
@@ -608,6 +623,7 @@ int FeOverlay::common_basic_dialog(
 
 		m_fePresent.on_transition( ShowOverlay, var );
 
+		init_event_loop( c );
 		while ( event_loop( c ) == false )
 		{
 			m_fePresent.on_transition( NewSelOverlay, sel );
@@ -681,6 +697,7 @@ int FeOverlay::common_basic_dialog(
 		if ( fm.flag_set() )
 			m_fePresent.on_transition( ShowOverlay, var );
 
+		init_event_loop( c );
 		while ( event_loop( c ) == false )
 		{
 			if ( fm.flag_set() )
@@ -695,7 +712,7 @@ int FeOverlay::common_basic_dialog(
 	return sel;
 }
 
-void FeOverlay::edit_dialog(
+bool FeOverlay::edit_dialog(
 			const std::string &msg_str,
 			std::string &text )
 {
@@ -733,11 +750,14 @@ void FeOverlay::edit_dialog(
 	// NOTE: ShowOverlay and HideOverlay events are  not sent when a
 	// script triggers the edit dialog.  This is on purpose.
 	//
-	if ( edit_loop( draw_list, str, &tp ) == true )
+	if ( edit_loop( draw_list, str, &tp ) )
 	{
 		text.clear();
 		sf::Utf32::toUtf8( str.begin(), str.end(), std::back_inserter( text ) );
+		return true;
 	}
+
+	return false;
 }
 
 void FeOverlay::input_map_dialog(
@@ -780,6 +800,17 @@ void FeOverlay::input_map_dialog(
 	// this should only happen from the config dialog
 	ASSERT( m_overlay_is_on );
 
+	bool multi_mode=false; // flag if we are checking for multiple inputs.
+	bool done=false;
+
+	sf::IntRect mc_rect;
+	int joy_thresh;
+	m_feSettings.get_input_config_metrics( mc_rect, joy_thresh );
+
+	std::set < std::pair<int,int> > joystick_moves;
+	FeInputMapEntry entry;
+	sf::Clock timeout;
+
 	const sf::Transform &t = m_fePresent.get_transform();
 	while ( m_wnd.isOpen() )
 	{
@@ -788,8 +819,65 @@ void FeOverlay::input_map_dialog(
 			if ( ev.type == sf::Event::Closed )
 				return;
 
-			if ( m_feSettings.config_map_input( ev, map_str, conflict ) )
-				return;
+			if ( multi_mode && ((ev.type == sf::Event::KeyReleased )
+					|| ( ev.type == sf::Event::JoystickButtonReleased )
+					|| ( ev.type == sf::Event::MouseButtonReleased )))
+				done = true;
+			else
+			{
+				FeInputSingle single( ev, mc_rect, joy_thresh );
+				if ( single.get_type() != FeInputSingle::Unsupported )
+				{
+					if (( ev.type == sf::Event::KeyPressed )
+							|| ( ev.type == sf::Event::JoystickButtonPressed )
+							|| ( ev.type == sf::Event::MouseButtonPressed ))
+						multi_mode = true;
+					else if ( ev.type == sf::Event::JoystickMoved )
+					{
+						multi_mode = true;
+						joystick_moves.insert( std::pair<int,int>( ev.joystickMove.joystickId, ev.joystickMove.axis ) );
+					}
+
+					bool dup=false;
+
+					std::vector< FeInputSingle >::iterator it;
+					for ( it = entry.inputs.begin(); it != entry.inputs.end(); ++it )
+					{
+						if ( (*it) == single )
+						{
+							dup=true;
+							break;
+						}
+					}
+
+					if ( !dup )
+					{
+						entry.inputs.push_back( single );
+						timeout.restart();
+					}
+
+					if ( !multi_mode )
+						done = true;
+				}
+				else if ( ev.type == sf::Event::JoystickMoved )
+				{
+					// test if a joystick has been released
+					std::pair<int,int> test( ev.joystickMove.joystickId, ev.joystickMove.axis );
+
+					if ( joystick_moves.find( test ) != joystick_moves.end() )
+						done = true;
+				}
+			}
+		}
+
+		if ( timeout.getElapsedTime() > sf::seconds( 6 ) )
+			done = true;
+
+		if ( done )
+		{
+			map_str = entry.as_string();
+			conflict = m_feSettings.input_conflict_check( entry );
+			return;
 		}
 
 		if ( m_fePresent.tick() )
@@ -816,6 +904,19 @@ bool FeOverlay::config_dialog()
 		m_wnd.close();
 
 	return settings_changed;
+}
+
+bool FeOverlay::edit_game_dialog()
+{
+	FeEditGameMenu m;
+	bool settings_changed=false;
+
+	if ( display_config_dialog( &m, settings_changed ) < 0 )
+		m_wnd.close();
+
+	// TODO: should only return true when setting_changed is true or when user deleted
+	// the rom completely
+	return true;
 }
 
 int FeOverlay::display_config_dialog(
@@ -939,6 +1040,7 @@ int FeOverlay::display_config_dialog(
 	{
 		FeEventLoopCtx c( draw_list, ctx.curr_sel, ctx.exit_sel, ctx.left_list.size() - 1 );
 
+		init_event_loop( c );
 		while ( event_loop( c ) == false )
 		{
 			footer.setString( ctx.curr_opt().help_msg );
@@ -1043,6 +1145,7 @@ int FeOverlay::display_config_dialog(
 
 					FeEventLoopCtx c( draw_list, new_value, -1, ctx.curr_opt().values_list.size() - 1 );
 
+					init_event_loop( c );
 					while ( event_loop( c ) == false )
 					{
 						tp->setString(ctx.curr_opt().values_list[new_value]);
@@ -1092,12 +1195,48 @@ bool FeOverlay::check_for_cancel()
 	{
 		FeInputMap::Command c = m_feSettings.map_input( ev );
 
-		if (( c == FeInputMap::ExitMenu )
+		if (( c == FeInputMap::Back )
+				|| ( c == FeInputMap::ExitMenu )
 				|| ( c == FeInputMap::ExitNoMenu ))
 			return true;
 	}
 
 	return false;
+}
+
+void FeOverlay::init_event_loop( FeEventLoopCtx &ctx )
+{
+	//
+	// Make sure the Back and Select buttons are NOT down, to avoid immediately
+	// triggering an exit/selection
+	//
+	const sf::Transform &t = m_fePresent.get_transform();
+
+	sf::Clock timer;
+	while (( timer.getElapsedTime() < sf::seconds( 6 ) )
+			&& ( m_feSettings.get_current_state( FeInputMap::Back )
+				|| m_feSettings.get_current_state( FeInputMap::ExitNoMenu )
+				|| m_feSettings.get_current_state( FeInputMap::Select ) ))
+	{
+		sf::Event ev;
+		while (m_wnd.pollEvent(ev))
+		{
+		}
+
+		if ( m_fePresent.tick() )
+		{
+			m_wnd.clear();
+			m_wnd.draw( m_fePresent, t );
+
+			for ( std::vector<sf::Drawable *>::const_iterator itr=ctx.draw_list.begin();
+					itr < ctx.draw_list.end(); ++itr )
+				m_wnd.draw( *(*itr), t );
+
+			m_wnd.display();
+		}
+		else
+			sf::sleep( sf::milliseconds( 30 ) );
+	}
 }
 
 //
@@ -1123,7 +1262,7 @@ bool FeOverlay::event_loop( FeEventLoopCtx &ctx )
 
 			switch( c )
 			{
-			case FeInputMap::ExitMenu:
+			case FeInputMap::Back:
 				ctx.sel = ctx.default_sel;
 				return true;
 			case FeInputMap::ExitNoMenu:
@@ -1132,7 +1271,10 @@ bool FeOverlay::event_loop( FeEventLoopCtx &ctx )
 			case FeInputMap::Select:
 				return true;
 			case FeInputMap::Up:
-			case FeInputMap::PageUp:
+				if (( ev.type == sf::Event::JoystickMoved )
+						&& ( ctx.move_event.type == sf::Event::JoystickMoved ))
+					return false;
+
 				if ( ctx.sel > 0 )
 					ctx.sel--;
 				else
@@ -1140,11 +1282,15 @@ bool FeOverlay::event_loop( FeEventLoopCtx &ctx )
 
 				ctx.move_event = ev;
 				ctx.move_command = FeInputMap::Up;
+				ctx.move_count = 0;
 				ctx.move_timer.restart();
 				return false;
 
 			case FeInputMap::Down:
-			case FeInputMap::PageDown:
+				if (( ev.type == sf::Event::JoystickMoved )
+						&& ( ctx.move_event.type == sf::Event::JoystickMoved ))
+					return false;
+
 				if ( ctx.sel < ctx.max_sel )
 					ctx.sel++;
 				else
@@ -1152,6 +1298,7 @@ bool FeOverlay::event_loop( FeEventLoopCtx &ctx )
 
 				ctx.move_event = ev;
 				ctx.move_command = FeInputMap::Down;
+				ctx.move_count = 0;
 				ctx.move_timer.restart();
 				return false;
 
@@ -1220,7 +1367,7 @@ bool FeOverlay::event_loop( FeEventLoopCtx &ctx )
 			if ( cont )
 			{
 				int t = ctx.move_timer.getElapsedTime().asMilliseconds();
-				if ( t > 500 )
+				if ( t > 500 + ctx.move_count * m_feSettings.selection_speed() )
 				{
 					if (( ctx.move_command == FeInputMap::Up )
 								&& ( ctx.sel > 0 ))
@@ -1237,7 +1384,10 @@ bool FeOverlay::event_loop( FeEventLoopCtx &ctx )
 				}
 			}
 			else
+			{
 				ctx.move_command = FeInputMap::LAST_COMMAND;
+				ctx.move_event = sf::Event();
+			}
 		}
 	}
 	return true;
@@ -1260,6 +1410,114 @@ public:
 	}
 };
 
+namespace
+{
+
+unsigned char my_char_table[] =
+{
+	' ',
+	'0',
+	'1',
+	'2',
+	'3',
+	'4',
+	'5',
+	'6',
+	'7',
+	'8',
+	'9',
+	'a',
+	'b',
+	'c',
+	'd',
+	'e',
+	'f',
+	'g',
+	'h',
+	'i',
+	'j',
+	'k',
+	'l',
+	'm',
+	'n',
+	'o',
+	'p',
+	'q',
+	'r',
+	's',
+	't',
+	'u',
+	'v',
+	'w',
+	'x',
+	'y',
+	'z',
+	'A',
+	'B',
+	'C',
+	'D',
+	'E',
+	'F',
+	'G',
+	'H',
+	'I',
+	'J',
+	'K',
+	'L',
+	'M',
+	'N',
+	'O',
+	'P',
+	'Q',
+	'R',
+	'S',
+	'T',
+	'U',
+	'V',
+	'W',
+	'X',
+	'Y',
+	'Z',
+	'?',
+	'!',
+	',',
+	'.',
+	':',
+	';',
+	'/',
+	'\\',
+	'\"',
+	'\'',
+	')',
+	'(',
+	'*',
+	'+',
+	'-',
+	'=',
+	'_',
+	'$',
+	'@',
+	'%',
+	'&',
+	'~',
+	0
+};
+
+int get_char_idx( unsigned char c )
+{
+	int i=0;
+	while ( my_char_table[i] )
+	{
+		if ( my_char_table[i] == c )
+			return i;
+		i++;
+	}
+
+	return 0;
+}
+
+};
+
 bool FeOverlay::edit_loop( std::vector<sf::Drawable *> d,
 			std::basic_string<sf::Uint32> &str, FeTextPrimative *tp )
 {
@@ -1277,6 +1535,9 @@ bool FeOverlay::edit_loop( std::vector<sf::Drawable *> d,
 	bool redraw=true;
 	FeKeyRepeat key_repeat_enabler( m_wnd );
 
+	sf::Event joy_guard;
+	bool did_delete( false ); // flag if the user just deleted a character using the UI controls
+
 	while ( m_wnd.isOpen() )
 	{
 		sf::Event ev;
@@ -1288,6 +1549,9 @@ bool FeOverlay::edit_loop( std::vector<sf::Drawable *> d,
 				return false;
 
 			case sf::Event::TextEntered:
+
+				did_delete = false;
+
 				if ( ev.text.unicode == 8 ) // backspace
 				{
 					if ( cursor_pos > 0 )
@@ -1316,6 +1580,9 @@ bool FeOverlay::edit_loop( std::vector<sf::Drawable *> d,
 				break;
 
 			case sf::Event::KeyPressed:
+
+				did_delete = false;
+
 				switch ( ev.key.code )
 				{
 				case sf::Keyboard::Left:
@@ -1372,7 +1639,125 @@ bool FeOverlay::edit_loop( std::vector<sf::Drawable *> d,
 				default:
 					break;
 				}
+				break;
+
 			default:
+				//
+				// Handle UI actions from non-keyboard input
+				//
+				{
+					FeInputMap::Command c = m_feSettings.map_input( ev );
+
+					switch ( c )
+					{
+					case FeInputMap::Left:
+						if (( ev.type == sf::Event::JoystickMoved )
+								&& ( joy_guard.type == sf::Event::JoystickMoved ))
+							break;
+
+						did_delete = false;
+
+						if ( cursor_pos > 0 )
+							cursor_pos--;
+
+						redraw = true;
+
+						if ( ev.type == sf::Event::JoystickMoved )
+							joy_guard = ev;
+						break;
+
+					case FeInputMap::Right:
+						if (( ev.type == sf::Event::JoystickMoved )
+								&& ( joy_guard.type == sf::Event::JoystickMoved ))
+							break;
+
+						did_delete = false;
+
+						if ( cursor_pos < (int)str.size() )
+							cursor_pos++;
+
+						redraw = true;
+
+						if ( ev.type == sf::Event::JoystickMoved )
+							joy_guard = ev;
+						break;
+
+					case FeInputMap::Up:
+						if (( ev.type == sf::Event::JoystickMoved )
+								&& ( joy_guard.type == sf::Event::JoystickMoved ))
+							break;
+
+						if ( cursor_pos < (int)str.size() )
+						{
+							if ( did_delete )
+							{
+								str.insert( cursor_pos, 1, my_char_table[0] );
+								redraw = true;
+								did_delete = false;
+							}
+							else
+							{
+								int idx = get_char_idx( str[cursor_pos] );
+
+								if ( my_char_table[idx+1] )
+								{
+									str[cursor_pos] = my_char_table[idx+1];
+									redraw = true;
+									did_delete = false;
+								}
+							}
+						}
+						else // allow inserting new characters at the end by pressing Up
+						{
+							str += my_char_table[0];
+							redraw = true;
+							did_delete = false;
+						}
+
+						if ( ev.type == sf::Event::JoystickMoved )
+							joy_guard = ev;
+						break;
+
+					case FeInputMap::Down:
+						if (( ev.type == sf::Event::JoystickMoved )
+								&& ( joy_guard.type == sf::Event::JoystickMoved ))
+							break;
+
+						if ( did_delete ) // force user to do something else to confirm delete
+							break;
+
+						if ( cursor_pos < (int)str.size() )
+						{
+							int idx = get_char_idx( str[cursor_pos] );
+
+							if ( idx > 0 )
+							{
+								str[cursor_pos] = my_char_table[idx-1];
+								redraw = true;
+							}
+							else //if ( idx == 0 )
+							{
+								// Special case allowing the user to delete
+								// a character
+								str.erase( cursor_pos, 1 );
+								redraw = true;
+								did_delete = true;
+							}
+						}
+
+						if ( ev.type == sf::Event::JoystickMoved )
+							joy_guard = ev;
+						break;
+
+					case FeInputMap::Back:
+						return false;
+
+					case FeInputMap::Select:
+						return true;
+					default:
+						break;
+					}
+				}
 			break;
 			}
 
@@ -1399,6 +1784,21 @@ bool FeOverlay::edit_loop( std::vector<sf::Drawable *> d,
 		}
 		else
 			sf::sleep( sf::milliseconds( 30 ) );
+
+		//
+		// Check if previous joystick move is now done (in which case we clear the guard)
+		//
+		if ( joy_guard.type == sf::Event::JoystickMoved )
+		{
+			sf::Joystick::update();
+
+			float pos = sf::Joystick::getAxisPosition(
+				joy_guard.joystickMove.joystickId,
+				joy_guard.joystickMove.axis );
+
+			if ( std::abs( pos ) < m_feSettings.get_joy_thresh() )
+				joy_guard = sf::Event();
+		}
 
 	}
 	return true;

@@ -9,7 +9,6 @@ Add Filter;Ajouter un filtre
 Add Input;Ajouter un contrôle
 Add New Display;Ajouter une nouvelle liste
 Add Rule;Ajouter une règle
-Add a rule to this filter;Ajouter une règle à ce filtre
 Add/Remove Favourite;Ajouter/Supprimer Favoris
 Add/Remove Tags;Ajouter/Supprimer des mots clés
 Additional Import File(s);Fichiers additionnels
@@ -28,18 +27,16 @@ Collection/Rom List;Liste de ROM
 Command;Commandes
 Command Arguments;Ligne de commande
 Comparison;Comparaison
-Config / Emulators;Configuration / Emulateurs
 Configure;Configuration
+Configure / Controls;Configuration / Contrôles
 Configure / Displays;Configuration / Listes
-Configure / Input;Configuration / Contrôles
+Configure / Emulators;Configuration / Emulateurs
 Configure / Miscellaneous;Configuration / Divers
 Configure / Plug-ins;Configuration / Plug-in
 Configure / Scraper;Configurer l'aspiration
 Configure / Sound;Configuration / Son
 Configure Plug-in;Configurer Plug-in
 Configure Screen Saver;Configurer l'économiseur d'écran
-Configure available emulators;Configurer les émulateurs disponibles
-Configure filter rule;Configuration de la règle de filtrage
 Confirm Favourites;Confirmer les favoris
 Control;Contrôle
 Controls;Contrôles
@@ -57,7 +54,6 @@ Delete this Display;Supprimer cette liste
 Delete this Emulator;Supprimer cet émulateur
 Delete this Filter;Supprimer ce filtre
 Delete this Rule;Supprimer cette règle
-Delete this filter;Supprimer ce filtre
 Disabled;Désactivé
 Display Edit;Edition de la liste
 Display Name;Nom de la liste
@@ -117,14 +113,13 @@ Next Display;Liste suivante
 Next Favourite;Favoris suivant
 Next Filter;Filtre suivant
 Next Letter;Lettre suivante
+Next Page;Page Précédente
 No;Non
 No Sort;Non classé
 No Wrap;Ne fait rien
 None;Non
 OR;OU
 Overwrite existing '$1' list?;Ecraser la liste de ROM '$1' existante?
-Page Down;Page Précédente
-Page Up;Page Suivante
 PlayedCount;Compteur de jeu
 PlayedTime;Temps de jeu
 Players;Joueurs
@@ -134,6 +129,7 @@ Previous Display;Liste précédente
 Previous Favourite;Favoris précédent
 Previous Filter;Filtre précédent
 Previous Letter;Lettre précédente 
+Previous Page;Page Suivante
 Random Game;Jeu au hasard
 Remove Input;Enlever le contrôle
 Replay Last Game;Rejouer au dernier jeu
@@ -179,7 +175,6 @@ Window;Fenêtre
 Window Mode;Mode d'affichage
 Wrap within Display (Default);Revient au début de la liste de filtres (Défaut)
 Wrote $1 entries to Collection/Rom List;Création de $1 entrées dans la liste de ROM
-XML Mode;Mode XML
 Year;Année
 Yes;Oui
 contains;contient
@@ -212,8 +207,7 @@ _help_control_next_display;Définit le(s) contrôle(s) qui bascule(nt) à la lis
 _help_control_next_favourite;Définit le(s) contrôle(s) qui selectionne(nt) le jeu favoris suivant
 _help_control_next_filter;Définit le(s) contrôle(s) qui bascule(nt) au filtre suivant
 _help_control_next_letter;Définit le(s) contrôle(s) qui bascule(nt) à la lettre suivante
-_help_control_page_down;Définit le(s) contrôle(s) qui décrémente(nt) la séléction d'une page
-_help_control_page_up;Définit le(s) contrôle(s) qui incrémente(nt) la séléction d'une page
+_help_control_next_page;Définit le(s) contrôle(s) qui décrémente(nt) la séléction d'une page
 _help_control_prev_display;Définit le(s) contrôle(s) qui bascule(nt) à la liste précédente
 _help_control_prev_favourite;Définit le(s) contrôle(s) qui selectionne(nt) le jeu favoris precedent
 _help_control_prev_filter;Définit le(s) contrôle(s) qui bascule(nt) au filtre précédente
@@ -303,8 +297,12 @@ _sort_regexp;^(Vs\. The |The |Vs\. )
 #
 # Extra strings provided by translation
 #
+Add a rule to this filter;Ajouter une règle à ce filtre
 Allow Exit from 'Lists Menu';Permettre la sortie des listes de menu 
 Ambient Sounds;Son d'ambiance
+Configure available emulators;Configurer les émulateurs disponibles
+Configure filter rule;Configuration de la règle de filtrage
+Delete this filter;Supprimer ce filtre
 Exit menu;Quitter le menu
 Generate Collection/Romlist;Générer la liste de ROM
 Launch Last Game on Startup;Lancer le dernier jeu au démarrage
@@ -312,12 +310,14 @@ Lists;Listes
 Lists Menu;Menu des listes
 Next List;Liste suivante
 Previous List;Liste précédent
+XML Mode;Mode XML
 en;Anglais
 es;Español
 fr;Français
 jp;Japonais
 kr;Coréen
 _help_autolaunch_last_game;Lancer automatiquement au démarrage le dernier jeu joué
+_help_control_previous_page;Définit le(s) contrôle(s) qui incrémente(nt) la séléction d'une page
 
 #@DONE_TRANSLATED
 #
@@ -326,27 +326,62 @@ _help_autolaunch_last_game;Lancer automatiquement au démarrage le dernier jeu j
 $1 Rule(s);$1 Rule(s)
 Add '$1' to Favourites?;Add '$1' to Favourites?
 Add Exception;Add Exception
+Add tag: '$1';Add tag: '$1'
+Configure Intro;Configure Intro
+Configure Layout;Configure Layout
+Create new tag;Create new tag
+Custom Arguments;Custom Arguments
+Custom Executable;Custom Executable
+Default Action;Default Action
+Delete game '$1'?;Delete game '$1'?
+Delete this Game;Delete this Game
+Edit Game;Edit Game
 Empty;Empty
 Enable Multiple Monitors;Enable Multiple Monitors
+Enter Romlist Name;Enter Romlist Name
+Enter new tag name;Enter new tag name
 Exception;Exception
 Exception Edit;Exception Edit
 FileIsAvailable;FileIsAvailable
 Intro;Intro
 Launch Last Game;Launch Last Game
+Next Game;Next Game
 Play Sound;Play Sound
+Previous Game;Previous Game
 Remove '$1' from Favourites?;Remove '$1' from Favourites?
+Remove tag: '$1';Remove tag: '$1'
 Scrape Videos (MAME only);Scrape Videos (MAME only)
 Show Displays Menu;Show Displays Menu
 Show Last Selection (Default);Show Last Selection (Default)
 Show in Cycle;Show in Cycle
 Show in Menu;Show in Menu
 Startup Mode;Startup Mode
+Video Decoder;Video Decoder
+Window (No Border);Window (No Border)
+multi;multi
 _help_art;An artwork resource available for use by layouts
 _help_back;Exit menu
+_help_control_back;Set the control(s) that go back
+_help_control_edit_game;Set the control(s) to edit the current selection
+_help_control_intro;Set the control(s) that show the intro video
+_help_control_left;Set the control(s) that move the selection left
+_help_control_next_game;Set the control(s) that move to the next game
+_help_control_prev_game;Set the control(s) that move to the previous game
+_help_control_prev_page;Set the control(s) that move the selection down one page
+_help_control_right;Set the control(s) that move the selection right
 _help_display_in_cycle;Include this display in the "Previous Display"/"Next Display" cycle?
 _help_display_in_menu;Include this display in the "Displays Menu"?
+_help_emu_sel_gen_romlist;Generate a Collection/Romlist containing games for multiple emulators
 _help_filter_add_exception;Add an exception to this filter.  If a game matches an exception (and wasn't filtered out by an earlier rule) it will be listed in the filter
 _help_filter_exception;Configure this filter exception.  If a game matches an exception it will be listed in the filter.  Rules and exceptions get applied in the order that they are listed
+_help_game_custom_args;Set this to override the default command line arguments for this game.  Set this to [nothing] if you want to override with no parameters.  The following get substituted appropriately: [name], [romext], [rompath], [emulator], [romfilename], [system], [systemn]
+_help_game_custom_executable;Set this to override the default executable for this game
+_help_game_delete;Delete this game from the Romlist
+_help_game_edit;Edit this game information
+_help_generator_build;Generate romlist with the selected emulator(s)
+_help_generator_opt;Set whether this emulator is to be included in the generated romlist
 _help_input_action;
+_help_input_default_action;Set the default behaviour for this control
 _help_multiple_monitors;Enable the use of multiple monitors by Attract-Mode
 _help_startup_mode;Set what should happen when Attract-Mode first starts up
+_help_video_decoder;Configure the decoder to use for video playback (if multiple decoders are available)
