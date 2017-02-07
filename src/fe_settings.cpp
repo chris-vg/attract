@@ -20,8 +20,8 @@
  *
  */
 
-#include "fe_settings.hpp"
 #include "fe_util.hpp"
+#include "fe_settings.hpp"
 #include "zip.hpp"
 #include <iostream>
 #include <sstream>
@@ -30,6 +30,7 @@
 #include <iomanip>
 #include <algorithm>
 #include <stdlib.h>
+#include <cctype>
 
 #include <SFML/System/Clock.hpp>
 #include <SFML/Config.hpp>
@@ -111,7 +112,7 @@ const char *FE_INTRO_FILE				= "intro.nut";
 const char *FE_LAYOUT_FILE_BASE		= "layout";
 const char *FE_LAYOUT_FILE_EXTENSION	= ".nut";
 const char *FE_LANGUAGE_FILE_EXTENSION = ".msg";
-const char *FE_SWF_EXT = ".swf";
+const char *FE_SWF_EXT					= ".swf";
 const char *FE_PLUGIN_FILE_EXTENSION	= FE_LAYOUT_FILE_EXTENSION;
 const char *FE_GAME_EXTRA_FILE_EXTENSION = ".cfg";
 const char *FE_LAYOUT_SUBDIR			= "layouts/";
@@ -125,6 +126,7 @@ const char *FE_STATS_SUBDIR			= "stats/";
 const char *FE_LOADER_SUBDIR			= "loader/";
 const char *FE_INTRO_SUBDIR			= "intro/";
 const char *FE_SCRAPER_SUBDIR			= "scraper/";
+const char *FE_MENU_ART_SUBDIR		= "menu-art/";
 const char *FE_LIST_DEFAULT			= "default-display.cfg";
 const char *FE_FILTER_DEFAULT			= "default-filter.cfg";
 const char *FE_CFG_YES_STR				= "yes";
@@ -250,7 +252,8 @@ FeSettings::FeSettings( const std::string &config_path,
 	m_displays_menu_exit( true ),
 	m_hide_brackets( false ),
 	m_startup_mode( ShowLastSelection ),
-	m_confirm_favs( false ),
+	m_confirm_favs( true ),
+	m_confirm_exit( true ),
 	m_track_usage( true ),
 	m_multimon( true ),
 	m_window_mode( Default ),
@@ -264,6 +267,8 @@ FeSettings::FeSettings( const std::string &config_path,
 	m_scrape_wheels( true ),
 	m_scrape_fanart( false ),
 	m_scrape_vids( false ),
+	m_scrape_mamedb( true ),
+	m_scrape_overview( true ),
 #ifdef SFML_SYSTEM_WINDOWS
 	m_hide_console( false ),
 #endif
@@ -393,6 +398,11 @@ void FeSettings::load()
 	std::string rex_str;
 	get_resource( "_sort_regexp", rex_str );
 	FeRomListSorter::init_title_rex( rex_str );
+
+	// If no menu prompt is configured, default to calling it "Displays Menu" (in current language)
+	//
+	if ( m_menu_prompt.empty() )
+		get_resource( "Displays Menu", m_menu_prompt );
 }
 
 const char *FeSettings::configSettingStrings[] =
@@ -406,6 +416,7 @@ const char *FeSettings::configSettingStrings[] =
 	"hide_brackets",
 	"startup_mode",
 	"confirm_favourites",
+	"confirm_exit",
 	"mouse_threshold",
 	"joystick_threshold",
 	"window_mode",
@@ -421,10 +432,14 @@ const char *FeSettings::configSettingStrings[] =
 	"scrape_wheels",
 	"scrape_fanart",
 	"scrape_videos",
+	"scrape_mamedb",
+	"scrape_overview",
 #ifdef SFML_SYSTEM_WINDOWS
 	"hide_console",
 #endif
 	"video_decoder",
+	"menu_prompt",
+	"menu_layout",
 	NULL
 };
 
@@ -545,15 +560,54 @@ int FeSettings::process_setting( const std::string &setting,
 
 void FeSettings::init_display()
 {
-	set_search_rule( "" );
+	m_loaded_game_extras = false;
 
+	//
+	// Setting new_index to negative causes us to do the 'Displays Menu' w/ custom layout
+	//
 	if ( m_current_display < 0 )
 	{
 		m_rl.init_as_empty_list();
+		FeRomInfoListType &l = m_rl.get_list();
+
+		for ( unsigned int i=0; i<m_display_menu.size(); i++ )
+		{
+			FeDisplayInfo *p = &(m_displays[m_display_menu[i]]);
+
+			FeRomInfo rom( p->get_info( FeDisplayInfo::Name ) );
+			rom.set_info( FeRomInfo::Title, p->get_info( FeDisplayInfo::Name ) );
+			rom.set_info( FeRomInfo::Emulator, "@" );
+			rom.set_info( FeRomInfo::AltRomname, p->get_info( FeDisplayInfo::Romlist ) );
+
+			l.push_back( rom );
+		}
+
+		if ( m_displays_menu_exit )
+		{
+			std::string exit_str;
+			get_resource( "Exit Attract-Mode", exit_str );
+
+			FeRomInfo rom( exit_str );
+			rom.set_info( FeRomInfo::Title, exit_str );
+			rom.set_info( FeRomInfo::Emulator, "@exit" );
+			rom.set_info( FeRomInfo::AltRomname, "exit" );
+
+			l.push_back( rom );
+		}
+
+		FeDisplayInfo empty( "" );
+		m_rl.create_filters( empty );
+
+		// we want to keep m_current_search_index through the set_search_value() call
+		int temp_idx = m_current_search_index;
+		set_search_rule( "" );
+		m_current_search_index = temp_idx;
 
 		construct_display_maps();
 		return;
 	}
+
+	set_search_rule( "" );
 
 	const std::string &romlist_name = m_displays[m_current_display].get_info(FeDisplayInfo::Romlist);
 	if ( romlist_name.empty() )
@@ -620,6 +674,10 @@ void FeSettings::construct_display_maps()
 
 void FeSettings::save_state()
 {
+	int display_idx = m_current_display;
+	if ( display_idx < 0 )
+		display_idx = m_current_search_index;
+
 	m_rl.save_state();
 
 	std::string filename( m_config_path );
@@ -630,9 +688,10 @@ void FeSettings::save_state()
 	std::ofstream outfile( filename.c_str() );
 	if ( outfile.is_open() )
 	{
-		outfile << m_current_display << ";"
+		outfile << display_idx << ";"
 			<< m_last_launch_display << "," << m_last_launch_filter
-			<< "," << m_last_launch_rom << std::endl;
+			<< "," << m_last_launch_rom << ";" << m_menu_layout_file
+			<< std::endl;
 
 		for ( std::vector<FeDisplayInfo>::const_iterator itl=m_displays.begin();
 					itl != m_displays.end(); ++itl )
@@ -665,11 +724,15 @@ void FeSettings::load_state()
 
 		m_current_display = as_int( tok );
 
+		token_helper( line, pos, tok, ";" );
+
 		int i=0;
-		while (( pos < line.size() ) && ( i < 3 ))
+		size_t pos2=0;
+		while (( pos2 < tok.size() ) && ( i < 3 ))
 		{
-			token_helper( line, pos, tok, "," );
-			int temp = as_int( tok );
+			std::string tok2;
+			token_helper( tok, pos2, tok2, "," );
+			int temp = as_int( tok2 );
 
 			switch (i)
 			{
@@ -679,6 +742,9 @@ void FeSettings::load_state()
 			}
 			i++;
 		}
+
+		token_helper( line, pos, tok, ";" );
+		m_menu_layout_file = tok;
 
 		for ( std::vector<FeDisplayInfo>::iterator itl=m_displays.begin();
 					itl != m_displays.end(); ++itl )
@@ -786,7 +852,7 @@ int FeSettings::get_filter_index_from_offset( int offset ) const
 int FeSettings::get_filter_count() const
 {
 	if ( m_current_display < 0 )
-		return 0;
+		return 1;
 
 	return m_displays[m_current_display].get_filter_count();
 }
@@ -802,11 +868,13 @@ int FeSettings::get_filter_size( int filter_index ) const
 
 int FeSettings::get_rom_index( int filter_index, int offset ) const
 {
-	if ( m_current_display < 0 )
-		return -1;
-
 	int retval, rl_size;
-	if ( !m_current_search.empty()
+	if ( m_current_display < 0 )
+	{
+		retval = m_current_search_index;
+		rl_size = m_rl.filter_size( filter_index );
+	}
+	else if ( !m_current_search.empty()
 			&& ( get_current_filter_index() == filter_index ))
 	{
 		retval = m_current_search_index;
@@ -878,7 +946,7 @@ const std::string &FeSettings::get_search_rule() const
 const std::string &FeSettings::get_current_display_title() const
 {
 	if ( m_current_display < 0 )
-		return FE_EMPTY_STRING;
+		return m_menu_prompt; // When showing the 'Displays Menu', title=configured menu prompt
 
 	return m_displays[m_current_display].get_info( FeDisplayInfo::Name );
 }
@@ -997,14 +1065,26 @@ bool FeSettings::get_path(
 	case Layout:
 	default:
 		if ( m_current_display < 0 )
-			return false;
+		{
+			// We are showing the "Displays Menu"
+			if ( !get_layout_dir( m_menu_layout, path ) )
+				return false;
 
-		if ( !get_layout_dir(
-				m_displays[ m_current_display ].get_info( FeDisplayInfo::Layout ),
-				path ) )
-			return false;
+			file = m_menu_layout_file;
+		}
+		else
+		{
+			if ( m_current_display < 0 )
+				return false;
 
-		file = m_displays[m_current_display].get_current_layout_file();
+			if ( !get_layout_dir(
+					m_displays[ m_current_display ].get_info( FeDisplayInfo::Layout ),
+					path ) )
+				return false;
+
+			file = m_displays[m_current_display].get_current_layout_file();
+		}
+
 		if ( file.empty() )
 		{
 			if ( is_supported_archive( path ) )
@@ -1172,15 +1252,16 @@ FeLayoutInfo &FeSettings::get_current_config( FePathType t )
 	case Loader:
 	case Layout:
 	default:
-		if ( m_current_display >= 0 )
+		if ( m_current_display < 0 )
+		{
+			// showing the "Displays Menu"
+			return get_layout_config( m_menu_layout );
+		}
+		else
 		{
 			return get_layout_config(
 				m_displays[ m_current_display ].get_info(
 					FeDisplayInfo::Layout ) );
-		}
-		else
-		{
-			return get_layout_config( "" );
 		}
 	}
 }
@@ -1203,6 +1284,9 @@ bool FeSettings::set_display( int index )
 {
 	std::string old_path, old_file;
 	get_path( Layout, old_path, old_file );
+
+	if ( index < 0 )
+		m_current_search_index = find_idx_in_vec( m_current_display, m_display_menu );
 
 	m_current_display = index;
 
@@ -1232,6 +1316,9 @@ bool FeSettings::navigate_display( int step, bool wrap_mode )
 		else
 			idx = m_display_cycle[i];
 	}
+
+	if ( idx >= (int)m_displays.size() )
+		return false;
 
 	bool retval = set_display( idx );
 
@@ -1293,13 +1380,11 @@ int FeSettings::get_display_index_from_name( const std::string &n ) const
 // if rom_index < 0, then the rom index is left unchanged and only the filter index is changed
 void FeSettings::set_current_selection( int filter_index, int rom_index )
 {
-	if ( m_current_display < 0 )
-		return;
-
 	// handle situation where we are currently showing a search result
 	//
-	if ( !m_current_search.empty()
-			&& ( get_current_filter_index() == filter_index ))
+	if (( m_current_display < 0 )
+		|| ( !m_current_search.empty()
+			&& ( get_current_filter_index() == filter_index )))
 	{
 		m_current_search_index = rom_index;
 	}
@@ -1317,11 +1402,12 @@ namespace {
 	const char *game_extra_strings[] = {
 		"executable",
 		"args",
+		"overview",
 		NULL
 	};
 };
 
-std::string FeSettings::get_game_extra( GameExtra id )
+const std::string &FeSettings::get_game_extra( GameExtra id )
 {
 	if ( !m_loaded_game_extras )
 	{
@@ -1338,47 +1424,11 @@ std::string FeSettings::get_game_extra( GameExtra id )
 		if ( romlist_name.empty() )
 			return FE_EMPTY_STRING;
 
-		std::string path( m_config_path );
-		path += FE_ROMLIST_SUBDIR;
-		path += romlist_name;
-		path += "/";
-
-		std::string name = get_rom_info( 0, 0, FeRomInfo::Romname );
-		if (( !directory_exists( path ) ) || name.empty() )
+		if ( !load_game_extras(
+				romlist_name,
+				get_rom_info( 0, 0, FeRomInfo::Romname ),
+				m_game_extras ) )
 			return FE_EMPTY_STRING;
-
-		path += name;
-		path += FE_GAME_EXTRA_FILE_EXTENSION;
-		if ( !file_exists( path ) )
-			return FE_EMPTY_STRING;
-
-		std::ifstream in_file( path.c_str() );
-		if ( !in_file.is_open() )
-			return FE_EMPTY_STRING;
-
-		while ( in_file.good() )
-		{
-			std::string line, s, v;
-			getline( in_file, line );
-			if ( line_to_setting_and_value( line, s, v ) )
-			{
-				int i=0;
-				while ( game_extra_strings[i] != NULL )
-				{
-					if ( s.compare( game_extra_strings[i] ) == 0 )
-					{
-						m_game_extras[ (GameExtra)i ] = v;
-						break;
-					}
-					i++;
-				}
-
-				if ( game_extra_strings[i] == NULL )
-					std::cerr << " ! Unrecognized game setting: " << s << " " << v << std::endl;
-			}
-		}
-
-		in_file.close();
 	}
 
 	std::map<GameExtra,std::string>::iterator it = m_game_extras.find( id );
@@ -1386,6 +1436,54 @@ std::string FeSettings::get_game_extra( GameExtra id )
 		return (*it).second;
 
 	return FE_EMPTY_STRING;
+}
+
+bool FeSettings::load_game_extras(
+		const std::string &romlist_name,
+		const std::string &romname,
+		std::map<GameExtra,std::string> &extras )
+{
+	std::string path( m_config_path );
+	path += FE_ROMLIST_SUBDIR;
+	path += romlist_name;
+	path += "/";
+
+	if (( !directory_exists( path ) ) || romname.empty() )
+		return false;
+
+	path += romname;
+	path += FE_GAME_EXTRA_FILE_EXTENSION;
+	if ( !file_exists( path ) )
+		return false;
+
+	std::ifstream in_file( path.c_str() );
+	if ( !in_file.is_open() )
+		return false;
+
+	while ( in_file.good() )
+	{
+		std::string line, s, v;
+		getline( in_file, line );
+		if ( line_to_setting_and_value( line, s, v ) )
+		{
+			int i=0;
+			while ( game_extra_strings[i] != NULL )
+			{
+				if ( s.compare( game_extra_strings[i] ) == 0 )
+				{
+					extras[ (GameExtra)i ] = v;
+					break;
+				}
+				i++;
+			}
+
+			if ( game_extra_strings[i] == NULL )
+				std::cerr << " ! Unrecognized game setting: " << s << " " << v << std::endl;
+		}
+	}
+
+	in_file.close();
+	return true;
 }
 
 void FeSettings::set_game_extra( GameExtra id, const std::string &value )
@@ -1409,6 +1507,16 @@ void FeSettings::save_game_extras()
 	if ( romlist_name.empty() )
 		return;
 
+	save_game_extras(
+		romlist_name,
+		get_rom_info( 0, 0, FeRomInfo::Romname ),
+		m_game_extras );
+}
+
+void FeSettings::save_game_extras( const std::string &romlist_name,
+		const std::string &romname,
+		const std::map<GameExtra,std::string> &extras )
+{
 	std::string path( m_config_path );
 	path += FE_ROMLIST_SUBDIR;
 
@@ -1417,15 +1525,13 @@ void FeSettings::save_game_extras()
 	path += romlist_name;
 	path += "/";
 
-	std::string name = get_rom_info( 0, 0, FeRomInfo::Romname );
-
-	if ( name.empty() )
+	if ( romname.empty() )
 		return;
 
-	path += name;
+	path += romname;
 	path += FE_GAME_EXTRA_FILE_EXTENSION;
 
-	if ( m_game_extras.empty() )
+	if ( extras.empty() )
 	{
 		if ( file_exists( path ) )
 			delete_file( path );
@@ -1437,8 +1543,8 @@ void FeSettings::save_game_extras()
 	if ( !out_file.is_open() )
 		return;
 
-	std::map<GameExtra,std::string>::iterator it;
-	for ( it=m_game_extras.begin(); it!=m_game_extras.end(); ++it )
+	std::map<GameExtra,std::string>::const_iterator it;
+	for ( it=extras.begin(); it!=extras.end(); ++it )
 		out_file << game_extra_strings[(int)(*it).first] << " " << (*it).second << std::endl;
 
 	out_file.close();
@@ -1494,7 +1600,8 @@ void FeSettings::step_current_selection( int step )
 bool FeSettings::select_last_launch()
 {
 	bool retval = false;
-	if ( m_current_display != m_last_launch_display )
+	if (( m_current_display != m_last_launch_display )
+		&& ( m_last_launch_display < (int)m_displays.size() ))
 	{
 		set_display( m_last_launch_display );
 		retval = true;
@@ -1635,9 +1742,6 @@ bool FeSettings::set_current_tag(
 
 void FeSettings::toggle_layout()
 {
-	if ( m_current_display < 0 )
-		return;
-
 	std::vector<std::string> list;
 
 	std::string layout_path, layout_file;
@@ -1665,7 +1769,11 @@ void FeSettings::toggle_layout()
 	}
 
 	layout_file = list[ ( index + 1 ) % list.size() ];
-	m_displays[ m_current_display ].set_current_layout_file( layout_file );
+
+	if ( m_current_display < 0 )
+		m_menu_layout_file = layout_file;
+	else
+		m_displays[ m_current_display ].set_current_layout_file( layout_file );
 }
 
 void FeSettings::set_volume( FeSoundInfo::SoundType t, const std::string &v )
@@ -1725,7 +1833,7 @@ void FeSettings::get_sounds_list( std::vector < std::string > &ll ) const
 	internal_gather_config_files( ll, "", FE_SOUND_SUBDIR );
 }
 
-void FeSettings::run( int &minimum_run_seconds )
+void FeSettings::run( int &minimum_run_seconds, launch_callback_fn launch_cb, void *launch_opaque )
 {
 	minimum_run_seconds=0;
 	int filter_index = get_current_filter_index();
@@ -1801,7 +1909,7 @@ void FeSettings::run( int &minimum_run_seconds )
 	bool found=false;
 	for ( itr = paths.begin(); itr != paths.end(); ++itr )
 	{
-		std::string path = clean_path( *itr, true );
+		std::string path = emu->clean_path_with_wd( *itr, true );
 
 		std::vector < std::string > in_list;
 		std::vector < std::string > out_list;
@@ -1866,6 +1974,8 @@ void FeSettings::run( int &minimum_run_seconds )
 	perform_substitution( args, "[romfilename]", romfilename );
 	perform_substitution( args, "[emulator]",
 				emu->get_info( FeEmulatorInfo::Name ) );
+	perform_substitution( args, "[workdir]",
+				clean_path( emu->get_info( FeEmulatorInfo::Working_dir ) ) );
 
 	const std::vector<std::string> &systems = emu->get_systems();
 	if ( !systems.empty() )
@@ -1879,6 +1989,17 @@ void FeSettings::run( int &minimum_run_seconds )
 		temp = emu->get_info( FeEmulatorInfo::Executable );
 
 	command = clean_path( temp );
+
+	std::string work_dir = clean_path( emu->get_info( FeEmulatorInfo::Working_dir ), true );
+	if ( work_dir.empty() )
+	{
+		size_t pos = command.find_last_of( "/\\" );
+		if ( pos != std::string::npos )
+			work_dir = command.substr( 0, pos );
+	}
+
+	if ( !work_dir.empty() )
+		std::cout << " - Working directory: " << work_dir << std::endl;
 
 	std::cout << "*** Running: " << command << " " << args << std::endl;
 
@@ -1898,11 +2019,14 @@ void FeSettings::run( int &minimum_run_seconds )
 	run_program(
 		command,
 		args,
+		work_dir,
 		NULL,
 		NULL,
 		true,
 		exit_hotkey,
-		m_joy_thresh );
+		m_joy_thresh,
+		launch_cb,
+		launch_opaque );
 
 	if ( m_track_usage )
 		update_stats( 1, play_timer.getElapsedTime().asSeconds() );
@@ -1910,6 +2034,9 @@ void FeSettings::run( int &minimum_run_seconds )
 
 void FeSettings::update_stats( int play_count, int play_time )
 {
+	if ( m_current_display < 0 )
+		return;
+
 	int filter_index = get_current_filter_index();
 
 	if ( get_filter_size( filter_index ) < 1 )
@@ -2012,6 +2139,7 @@ void FeSettings::do_text_substitutions_absolute( std::string &str, int filter_in
 			"SortValue",
 			"System",
 			"SystemN",
+			"Overview",
 			NULL
 		};
 
@@ -2130,6 +2258,24 @@ void FeSettings::do_text_substitutions_absolute( std::string &str, int filter_in
 					}
 				}
 			}
+			break;
+
+		case 14: // "Overview"
+			if (( filter_index == 0 ) && ( rom_index == 0 ))
+				rep = get_game_extra( Overview );
+			else if ( m_current_display >= 0 )
+			{
+				std::map<GameExtra,std::string> extras;
+
+				load_game_extras(
+					m_displays[m_current_display].get_info( FeDisplayInfo::Romlist ),
+					get_rom_info_absolute( filter_index, rom_index, FeRomInfo::Romname ),
+					extras );
+
+				rep = extras[ Overview ];
+			}
+
+			perform_substitution( rep, "\\n", "\n" );
 			break;
 
 		default:
@@ -2318,11 +2464,14 @@ int FeSettings::get_screen_saver_timeout() const
 	return m_ssaver_time;
 }
 
-void FeSettings::get_display_menu(
+void FeSettings::get_displays_menu(
+	std::string &title,
 	std::vector<std::string> &names,
 	std::vector<int> &indices,
 	int &current_index ) const
 {
+	title = m_menu_prompt;
+
 	names.clear();
 	indices = m_display_menu;
 
@@ -2374,6 +2523,7 @@ const std::string FeSettings::get_info( int index ) const
 	case DisplaysMenuExit:
 	case HideBrackets:
 	case ConfirmFavourites:
+	case ConfirmExit:
 	case TrackUsage:
 	case MultiMon:
 	case SmoothImages:
@@ -2384,6 +2534,8 @@ const std::string FeSettings::get_info( int index ) const
 	case ScrapeWheels:
 	case ScrapeFanArt:
 	case ScrapeVids:
+	case ScrapeMameDB:
+	case ScrapeOverview:
 #ifdef SFML_SYSTEM_WINDOWS
 	case HideConsole:
 #endif
@@ -2394,6 +2546,12 @@ const std::string FeSettings::get_info( int index ) const
 #else
 		return FeMedia::get_decoder_label( FeMedia::get_current_decoder() );
 #endif
+
+	case MenuPrompt:
+		return m_menu_prompt;
+
+	case MenuLayout:
+		return m_menu_layout;
 
 	default:
 		break;
@@ -2411,6 +2569,8 @@ bool FeSettings::get_info_bool( int index ) const
 		return m_hide_brackets;
 	case ConfirmFavourites:
 		return m_confirm_favs;
+	case ConfirmExit:
+		return m_confirm_exit;
 	case TrackUsage:
 		return m_track_usage;
 	case MultiMon:
@@ -2431,6 +2591,10 @@ bool FeSettings::get_info_bool( int index ) const
 		return m_scrape_fanart;
 	case ScrapeVids:
 		return m_scrape_vids;
+	case ScrapeMameDB:
+		return m_scrape_mamedb;
+	case ScrapeOverview:
+		return m_scrape_overview;
 #ifdef SFML_SYSTEM_WINDOWS
 	case HideConsole:
 		return m_hide_console;
@@ -2502,6 +2666,10 @@ bool FeSettings::set_info( int index, const std::string &value )
 
 	case ConfirmFavourites:
 		m_confirm_favs = config_str_to_bool( value );
+		break;
+
+	case ConfirmExit:
+		m_confirm_exit = config_str_to_bool( value );
 		break;
 
 	case MouseThreshold:
@@ -2602,6 +2770,14 @@ bool FeSettings::set_info( int index, const std::string &value )
 		m_scrape_vids = config_str_to_bool( value );
 		break;
 
+	case ScrapeMameDB:
+		m_scrape_mamedb = config_str_to_bool( value );
+		break;
+
+	case ScrapeOverview:
+		m_scrape_overview = config_str_to_bool( value );
+		break;
+
 #ifdef SFML_SYSTEM_WINDOWS
 	case HideConsole:
 		m_hide_console = config_str_to_bool( value );
@@ -2611,6 +2787,18 @@ bool FeSettings::set_info( int index, const std::string &value )
 #ifndef NO_MOVIE
 		FeMedia::set_current_decoder_by_label( value );
 #endif
+		break;
+
+	case MenuLayout:
+		if ( m_menu_layout.compare( value ) != 0 )
+		{
+			m_menu_layout = value;
+			m_menu_layout_file.clear();
+		}
+		break;
+
+	case MenuPrompt:
+		m_menu_prompt = value;
 		break;
 
 	default:
@@ -2770,7 +2958,16 @@ void FeSettings::save() const
 	confirm_directory( m_config_path, FE_MODULES_SUBDIR );
 	confirm_directory( m_config_path, FE_SOUND_SUBDIR );
 	confirm_directory( m_config_path, FE_PLUGIN_SUBDIR );
+	confirm_directory( m_config_path, FE_MENU_ART_SUBDIR );
 	// no FE_LANGUAGE_SUBDIR
+
+	std::string menu_art = m_config_path;
+	menu_art += FE_MENU_ART_SUBDIR;
+	confirm_directory( menu_art, "flyer/" );
+	confirm_directory( menu_art, "wheel/" );
+	confirm_directory( menu_art, "marquee/" );
+	confirm_directory( menu_art, "snap/" );
+	confirm_directory( menu_art, "fanart/" );
 
 	std::string filename( m_config_path );
 	filename += FE_CFG_FILE;
@@ -3340,25 +3537,7 @@ bool FeSettings::get_best_artwork_file(
 	bool image_only,
 	bool ignore_emu )
 {
-	const std::string &emu_name = rom.get_info( FeRomInfo::Emulator );
-
-	std::string layout_path;
-	get_path( Current, layout_path );
-
-	FeEmulatorInfo *emu_info = get_emulator( emu_name );
-
 	std::vector < std::string > art_paths;
-	if ( emu_info )
-	{
-		std::vector < std::string > temp_list;
-		emu_info->get_artwork( art_name, temp_list );
-		for ( std::vector< std::string >::iterator itr = temp_list.begin();
-				itr != temp_list.end(); ++itr )
-		{
-			art_paths.push_back( clean_path( (*itr), true ) );
-			perform_substitution( art_paths.back(), "$LAYOUT", layout_path );
-		}
-	}
 
 	// map boxart->flyer and banner->marquee so that artworks with those labels get
 	// scraped artworks
@@ -3369,6 +3548,49 @@ bool FeSettings::get_best_artwork_file(
 		scrape_art = "marquee";
 	else
 		scrape_art = art_name;
+
+	std::string emu_name = rom.get_info( FeRomInfo::Emulator );
+	if ( emu_name.compare( 0, 1, "@" ) == 0 )
+	{
+		// If emu_name starts with "@", this is a display menu or signal option.
+		// Check for the emulator stored in altromname to try and get a sensible artwork
+		// in this circumstance
+		//
+		emu_name = rom.get_info( FeRomInfo::AltRomname );
+
+		std::string add_path = get_config_dir() + FE_MENU_ART_SUBDIR + scrape_art + "/";
+		if ( directory_exists( add_path ) )
+			art_paths.push_back( add_path );
+
+		if ( FE_DATA_PATH != NULL )
+		{
+			add_path = FE_DATA_PATH;
+			add_path += FE_MENU_ART_SUBDIR;
+			add_path += scrape_art;
+			add_path += "/";
+
+			if ( directory_exists( add_path ) )
+				art_paths.push_back( add_path );
+		}
+	}
+
+	std::string layout_path;
+	get_path( Current, layout_path );
+
+	FeEmulatorInfo *emu_info = get_emulator( emu_name );
+	if ( emu_info )
+	{
+		std::vector < std::string > temp_list;
+		emu_info->get_artwork( art_name, temp_list );
+		for ( std::vector< std::string >::iterator itr = temp_list.begin();
+			itr != temp_list.end(); ++itr )
+		{
+			art_paths.push_back(
+				emu_info->clean_path_with_wd( *itr, !is_supported_archive( *itr ) ) );
+
+			perform_substitution( art_paths.back(), "$LAYOUT", layout_path );
+		}
+	}
 
 	std::string scraper_path = get_config_dir() + FE_SCRAPER_SUBDIR + emu_name + "/" + scrape_art + "/";
 	if ( directory_exists( scraper_path ) )

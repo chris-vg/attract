@@ -1,234 +1,276 @@
-# This file is the template for Attract-Mode translations.
-# Translate the string to the right of the semicolon on each line.  thanks!
+#@中文 (Chinese);win_font=MSYH,YuGothR,MALGUN,ARIALUNI,MSMINCHO;mac_font=AppleLiSung;linux_font=UMing
 #
-$1 Rule(s);$1 Rule(s)
-Action;Action
-Add '$1' to Favourites?;Add '$1' to Favourites?
-Add Artwork;Add Artwork
-Add Emulator;Add Emulator
-Add Exception;Add Exception
-Add Filter;Add Filter
-Add Input;Add Input
-Add New Display;Add New Display
-Add Rule;Add Rule
+# Interface strings
+#
+$1 Rule(s);$1 规则(s)
+Action;项目
+Add '$1' to Favourites?;添加 '$1' 到收藏？
+Add Artwork;添加插图（Artwork)
+Add Emulator;添加模拟器
+Add Exception;添加例外 Add Exception
+Add Filter;添加分类
+Add Input;添加输入
+Add New Display;添加新的界面
+Add Rule;添加规则
+Add/Remove Favourite;添加/移除收藏
+Add/Remove Tags;添加/移除标签
+Additional Import File(s);导入附加文件
+All;全部
+Allow Exit from 'Displays Menu';在界面菜单中加入退出选项
+AltRomname;Rom名称(AltRomname)
+AltTitle;标题(AltTitle)
+Ambient Soundtrack;环境音
+Ambient Volume;环境音量
+Artwork Label;插图标签
+Artwork Path;插图路径
+Back;<返回<
+Category;类别(Category)
+CloneOf;克隆 (CloneOf)
+Collection/Rom List;收集/游戏列表
+Command;命令
+Command Arguments;命令及参数（ Arguments）
+Comparison;比较
+Configure;设置
+Configure / Controls;设置 / 控制器
+Configure / Displays;设置/界面
+Configure / Emulators;设置 / 模拟器
+Configure / Miscellaneous;设置/其它
+Configure / Plug-ins;设置/插件
+Configure / Scraper;搜刮
+Configure / Sound;设置/声音
+Configure Intro;设置开机画面
+Configure Plug-in;设置插件
+Configure Screen Saver;设置屏保
+Confirm Favourites;设置收藏
+Control;控制器(Control)
+Controls;控制器
+Custom1;用户 1
+Custom2;用户 2
+Custom3;用户 3
+Custom4;用户 4
+Custom5;用户 5
+Custom6;用户 6
+Default Action;默认动作 Default Action
+Default Font;标准字体
+Delete display '$1'?;删除 '$1' 界面?
+Delete emulator '$1'?;删除 '$1' 模拟器?
+Delete filter '$1'?;删除 '$1' 分类?
+Delete this Display;删除界面
+Delete this Emulator;删除模拟器
+Delete this Filter;删除排序
+Delete this Rule;删除规则
+Disabled;不显示
+Display Edit;界面修改
+Display Name;界面名称
+DisplayCount;界面数量(DisplayCount)
+DisplayType;界面各类(DisplayType)
+Displays;界面
+Displays Menu;显示器菜单
+Down;180度（向下）
+Edit Artwork;编辑ARTWORK
+Edit Emulator;编辑模拟器
+Edit Input;编辑控制器
+Empty;空
+Emulator;模拟器(Emulator)
+Emulator Name;模拟器名称
+Emulators;模拟器
+Enable Multiple Monitors;使多个显示器
+Enabled;显示
+Enter Display Name;进入显示器名称
+Enter Emulator Name;进入模拟器名称
+Enter Filter Name;进入排序名称
+Exception;其他 Exception
+Exception Edit;其他编辑 Exception Edit
+Executable;执行
+Exit Attract-Mode;退出ATTRACT-MODE
+Exit Attract-Mode?;退出ATTRACT-MODE吗?
+Exit Command;退出指令
+Exit Hotkey;退出热键
+Exit to Desktop;退出到桌面
+Extra;其他信息(Extra)
+Favourite;收藏
+FileIsAvailable;文件可用
+Fill Screen (Default);铺满屏幕 (标准)
+Filter;分类
+Filter Edit;编辑分类
+Filter Name;分类名称
+Filter Value;分类内容
+Filter Wrap Mode;分类切换模式
+Filters Menu;分类管理菜单
+Flip;180度（向下）
+Font Path;字体路径
+Fullscreen Mode;全屏模式
+Game Return Sound;游戏返回声音
+General;一般
+Generate Collection/Rom List;生成收集ROM列表
+Generating Rom List: $1%;ROM列表生成中: $1%
+Global Filter;全局分类
+Hide Brackets in Game Title;隐藏游戏标题中的括号
+Info Source/Scraper;信息源/搜刮
+Intro;启动画面
+Joystick Threshold;操纵杆的阈值
+Jump to Next Display;跳到下一界面
+Language;语言
+Launch Last Game;载入最后一次运行的游戏
+Layout;布局
+Layout Options;布局选项
+Left;270度（向左）
+List Limit;列表大小限制
+Manufacturer;制造商
+Menu Prompt;标题
+Menu Style / Layout;主题
+Minimum Run Time;最小运行时间
+Mouse Threshold;鼠标的阈值
+Movie Volume;视频音量
+Name;名称
+Next Display;下一界面
+Next Favourite;下一收藏
+Next Filter;下一分类
+Next Game;下一游戏
+Next Letter;下一关键词
+Next Page;下一页
+No;否
+No Sort;不排序
+No Wrap;不切换
+None;没有
+OR;或
+Overwrite existing '$1' list?;覆盖现有的 '$1' 列表？
+Play Sound;播放声音
+PlayedCount;游戏计数
+PlayedTime;游戏时间
+Players;玩家(Players)
+Plug-ins;插件
+Press Input;按下-设置按键
+Previous Display;上一界面
+Previous Favourite;上一收藏
+Previous Filter;上一分类
+Previous Game;上一游戏
+Previous Letter;上一关键词
+Previous Page;上一页
+Random Game;随机游戏
+Remove '$1' from Favourites?;从收藏中先锋队 '$1'？
+Remove Input;移除-设置按键
+Replay Last Game;重新上一次的游戏
+Right;90度（向右）
+Rom Extension(s);ROM扩展
+Rom Path(s);ROM路径
+Rom path '$1' not found, proceed anyways?;ROM路径 '$1' 没有找到。继续？
+Rotation;旋转(Rotation)
+Rule;规则
+Rule Edit;规则编辑
+Scrape Artwork;搜刮插图（Artwork）
+Scrape Fanart;搜刮玩家自制（Fanart）
+Scrape Flyers/Boxart;搜刮传单/手办（Flyers/Boxart）
+Scrape Game Logos (Wheel Art);搜刮LOGO (Wheel Art) 
+Scrape Marquees;搜刮跑马灯（Marquees）
+Scrape Snaps;搜刮快照（Snaps）
+Scrape Videos (MAME only);搜刮 Videos (MAME only)
+Scrape mamedb.com (MAME only);搜刮 mamedb.com（仅 MAME）
+Scraper;搜刮器
+Scraping Artwork: $1%;正在搜刮 $1% 插图
+Screen Saver;屏保
+Screen Saver Timeout;屏保等待时间
+Screenshot;截图
+Select;选择
+Show Displays Menu;界面选择器
+Show Last Selection (Default);显示最后的选择 (默认)
+Show in Cycle;在界面切换转轮中显示
+Show in Menu;在界面选择菜单中显示
+Sort By;排序方式
+Sound;声音
+Sound Volume;声音音量
+Startup Mode;启动模式
+Startup Sound;启动声音
+Status;仿真、现状(Status)
+System Identifier;系统标识（System Identifier）
+Tags;标签（Tags）
+Target;规则的目标（Target）
+The name for this filter;分类的名称
+This will overwrite an existing mapping ($1).  Proceed?;覆盖现有的映射 ($1)，继续？
+Title;标题(Title)
+Toggle Flip;反转 180度
+Toggle Layout;切换布局
+Toggle Movie;切换影片
+Toggle Mute;静音
+Toggle Rotate Left;转270度（向左)
+Toggle Rotate Right;转90度（向右)
+Track Usage;游戏时间/频率跟踪
+Up;0度（向上）
+Video Decoder;视频解码
+Window;窗口化
+Window Mode;窗口模式
+Wrap within Display (Default);该列表的第一个过滤器（默认）
+Wrote $1 entries to Collection/Rom List;所有 $1 ROM条目/ROM列表。
+Year;年(Year)
+Yes;是
+contains;包含
+does not contain;不包含
+does not equal;不等于
+equals;等于
+
+#
+# Help messages
+#
+
+#
+# Extra strings provided by translation
+#
+'Displays Menu' Options;界面选择器设置
+Add a rule to this filter;添加分类规则
+Ambient Sounds;背景音乐
+Back(Exit(Confirm));返回（退出）
+Basic Movie;全屏式动态画面
+Configure / Input;设置/控制器
+Configure available emulators;可用模拟器
+Configure filter rule;设置分类规则
+Delete this filter;删除分类
+Down(Next Game);↓（下一游戏）
+Exit;退出 (Yes/No)
+Exit menu;退出菜单
+Image Collage;拼图式静态画面
+Launch Last Game on Startup;启动时载入最后一次运行的游戏
+Left(Previous Display);←（上一界面）
+Movie Collage;拼图式动态画面
+Overlay Artwork;悬浮的插图
+Page Down;向下翻页
+Page Up;向上翻页
+Preserve Aspect Ratio;以当前游戏为背景
+RGB Movie;RGB模式（RGB Movie）
+Right(Next Display);→（下一界面）
+Up(Previous Game);↑（上一游戏）
+XML Mode;XML 模式
+cn;中文 (Chinese)
+de;Deutsch
+en;English
+es;Español
+font;字体
+fr;Français
+jp;日本語 (Japanese)
+kr;한글 (Korean)
+
+#@DONE_TRANSLATED
+#
+# Strings still needing translation
+#
 Add tag: '$1';Add tag: '$1'
-Add/Remove Favourite;Add/Remove Favourite
-Add/Remove Tags;Add/Remove Tags
-Additional Import File(s);Additional Import File(s)
-All;All
-Allow Exit from 'Displays Menu';Allow Exit from 'Displays Menu'
-AltRomname;AltRomname
-AltTitle;AltTitle
-Ambient Soundtrack;Ambient Soundtrack
-Ambient Volume;Ambient Volume
-Artwork Label;Artwork Label
-Artwork Path;Artwork Path
-Back;Back
 Buttons;Buttons
-Category;Category
-CloneOf;CloneOf
-Collection/Rom List;Collection/Rom List
-Command;Command
-Command Arguments;Command Arguments
-Comparison;Comparison
-Configure;Configure
-Configure / Controls;Configure / Controls
-Configure / Displays;Configure / Displays
 Configure / Displays Menu;Configure / Displays Menu
-Configure / Emulators;Configure / Emulators
-Configure / Miscellaneous;Configure / Miscellaneous
-Configure / Plug-ins;Configure / Plug-ins
-Configure / Scraper;Configure / Scraper
-Configure / Sound;Configure / Sound
-Configure Intro;Configure Intro
 Configure Layout;Configure Layout
-Configure Plug-in;Configure Plug-in
-Configure Screen Saver;Configure Screen Saver
 Confirm Exit;Confirm Exit
-Confirm Favourites;Confirm Favourites
-Control;Control
-Controls;Controls
 Create new tag;Create new tag
 Custom Arguments;Custom Arguments
 Custom Executable;Custom Executable
-Custom1;Custom1
-Custom2;Custom2
-Custom3;Custom3
-Custom4;Custom4
-Custom5;Custom5
-Custom6;Custom6
 Default;Default
-Default Action;Default Action
-Default Font;Default Font
-Delete display '$1'?;Delete display '$1'?
-Delete emulator '$1'?;Delete emulator '$1'?
-Delete filter '$1'?;Delete filter '$1'?
 Delete game '$1'?;Delete game '$1'?
-Delete this Display;Delete this Display
-Delete this Emulator;Delete this Emulator
-Delete this Filter;Delete this Filter
 Delete this Game;Delete this Game
-Delete this Rule;Delete this Rule
-Disabled;Disabled
-Display Edit;Display Edit
-Display Name;Display Name
-DisplayCount;DisplayCount
-DisplayType;DisplayType
-Displays;Displays
-Displays Menu;Displays Menu
-Down;Down
-Edit Artwork;Edit Artwork
-Edit Emulator;Edit Emulator
 Edit Game;Edit Game
-Edit Input;Edit Input
-Empty;Empty
-Emulator;Emulator
-Emulator Name;Emulator Name
-Emulators;Emulators
-Enable Multiple Monitors;Enable Multiple Monitors
-Enabled;Enabled
-Enter Display Name;Enter Display Name
-Enter Emulator Name;Enter Emulator Name
-Enter Filter Name;Enter Filter Name
 Enter Romlist Name;Enter Romlist Name
 Enter new tag name;Enter new tag name
-Exception;Exception
-Exception Edit;Exception Edit
-Executable;Executable
-Exit Attract-Mode;Exit Attract-Mode
-Exit Attract-Mode?;Exit Attract-Mode?
-Exit Command;Exit Command
-Exit Hotkey;Exit Hotkey
-Exit to Desktop;Exit to Desktop
-Extra;Extra
-Favourite;Favourite
-FileIsAvailable;FileIsAvailable
-Fill Screen (Default);Fill Screen (Default)
-Filter;Filter
-Filter Edit;Filter Edit
-Filter Name;Filter Name
-Filter Value;Filter Value
-Filter Wrap Mode;Filter Wrap Mode
-Filters Menu;Filters Menu
-Flip;Flip
-Font Path;Font Path
-Fullscreen Mode;Fullscreen Mode
-Game Return Sound;Game Return Sound
-General;General
-Generate Collection/Rom List;Generate Collection/Rom List
-Generating Rom List: $1%;Generating Rom List: $1%
-Global Filter;Global Filter
-Hide Brackets in Game Title;Hide Brackets in Game Title
-Info Source/Scraper;Info Source/Scraper
-Intro;Intro
-Joystick Threshold;Joystick Threshold
-Jump to Next Display;Jump to Next Display
-Language;Language
-Launch Last Game;Launch Last Game
-Layout;Layout
-Layout Options;Layout Options
-Left;Left
-List Limit;List Limit
-Manufacturer;Manufacturer
-Menu Prompt;Menu Prompt
-Menu Style / Layout;Menu Style / Layout
-Minimum Run Time;Minimum Run Time
-Mouse Threshold;Mouse Threshold
-Movie Volume;Movie Volume
-Name;Name
-Next Display;Next Display
-Next Favourite;Next Favourite
-Next Filter;Next Filter
-Next Game;Next Game
-Next Letter;Next Letter
-Next Page;Next Page
-No;No
-No Sort;No Sort
-No Wrap;No Wrap
-None;None
-OR;OR
 Overview;Overview
-Overwrite existing '$1' list?;Overwrite existing '$1' list?
-Play Sound;Play Sound
-PlayedCount;PlayedCount
-PlayedTime;PlayedTime
-Players;Players
-Plug-ins;Plug-ins
-Press Input;Press Input
-Previous Display;Previous Display
-Previous Favourite;Previous Favourite
-Previous Filter;Previous Filter
-Previous Game;Previous Game
-Previous Letter;Previous Letter
-Previous Page;Previous Page
-Random Game;Random Game
-Remove '$1' from Favourites?;Remove '$1' from Favourites?
-Remove Input;Remove Input
 Remove tag: '$1';Remove tag: '$1'
-Replay Last Game;Replay Last Game
-Right;Right
-Rom Extension(s);Rom Extension(s)
-Rom Path(s);Rom Path(s)
-Rom path '$1' not found, proceed anyways?;Rom path '$1' not found, proceed anyways?
-Rotation;Rotation
-Rule;Rule
-Rule Edit;Rule Edit
-Scrape Artwork;Scrape Artwork
-Scrape Fanart;Scrape Fanart
-Scrape Flyers/Boxart;Scrape Flyers/Boxart
-Scrape Game Logos (Wheel Art);Scrape Game Logos (Wheel Art)
-Scrape Marquees;Scrape Marquees
-Scrape mamedb.com (MAME only);Scrape mamedb.com (MAME only)
-Scrape Snaps;Scrape Snaps
-Scrape Videos (MAME only);Scrape Videos (MAME only)
-Scraper;Scraper
-Scraping Artwork: $1%;Scraping Artwork: $1%
-Screen Saver;Screen Saver
-Screen Saver Timeout;Screen Saver Timeout
-Screenshot;Screenshot
-Select;Select
-Show in Cycle;Show in Cycle
-Show in Menu;Show in Menu
-Show Displays Menu;Show Displays Menu
-Show Last Selection (Default);Show Last Selection (Default)
-Sort By;Sort By
-Sound;Sound
-Sound Volume;Sound Volume
-Startup Mode;Startup Mode
-Startup Sound;Startup Sound
-Status;Status
-System Identifier;System Identifier
-Tags;Tags
-Target;Target
-The name for this filter;The name for this filter
-This will overwrite an existing mapping ($1).  Proceed?;This will overwrite an existing mapping ($1).  Proceed?
-Title;Title
-Toggle Flip;Toggle Flip
-Toggle Layout;Toggle Layout
-Toggle Movie;Toggle Movie
-Toggle Mute;Toggle Mute
-Toggle Rotate Left;Toggle Rotate Left
-Toggle Rotate Right;Toggle Rotate Right
-Track Usage;Track Usage
-Up;Up
-Video Decoder;Video Decoder
-Window;Window
-Window Mode;Window Mode
 Window (No Border);Window (No Border)
 Working Directory;Working Directory
-Wrap within Display (Default);Wrap within Display (Default)
-Wrote $1 entries to Collection/Rom List;Wrote $1 entries to Collection/Rom List
-Year;Year
-Yes;Yes
-contains;contains
-does not contain;does not contain
-does not equal;does not equal
-equals;equals
 multi;multi
-
-#
-# Help message strings
-#
 _help_art;An artwork resource available for use by layouts
 _help_art_add;Add a new artwork resource (marquee images, screen shots, etc.)
 _help_art_label;The label that identifies this artwork resource (used by layouts)
@@ -331,8 +373,8 @@ _help_game_custom_executable;Set this to override the default executable for thi
 _help_game_delete;Delete this game from the Romlist
 _help_game_edit;Edit this game information
 _help_game_overview;Edit game overview
-_help_generator_opt;Set whether this emulator is to be included in the generated romlist
 _help_generator_build;Generate romlist with the selected emulator(s)
+_help_generator_opt;Set whether this emulator is to be included in the generated romlist
 _help_hide_brackets;Hide text in brackets when showing game titles
 _help_input_action;
 _help_input_add;Add a new input mapping for this control
@@ -370,6 +412,3 @@ _help_video_decoder;Configure the decoder to use for video playback (if multiple
 _help_volume;Valid volume settings are from 0 (mute) to 100 
 _help_window_mode;Set whether Attract-Mode fills the screen or runs in a window
 _sort_regexp;^(Vs\. The |The |Vs\. )
-
-# The next line is needed at the end of the template file
-#@DONE_TEMPLATE

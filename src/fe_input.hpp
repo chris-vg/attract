@@ -28,6 +28,7 @@
 #include "fe_base.hpp"
 #include <vector>
 #include <map>
+#include <set>
 
 class FeMapping;
 
@@ -50,9 +51,9 @@ public:
 
 	enum JoyCode
 	{
-		JoyUp, JoyDown, JoyLeft, JoyRight, JoyZPos, JoyZNeg,
-		JoyRPos, JoyRNeg, JoyUPos, JoyUNeg, JoyVPos, JoyVNeg,
+		JoyZPos, JoyZNeg, JoyRPos, JoyRNeg, JoyUPos, JoyUNeg, JoyVPos, JoyVNeg,
 		JoyPOVXPos, JoyPOVXNeg, JoyPOVYPos, JoyPOVYNeg,
+		JoyUp, JoyDown, JoyLeft, JoyRight,
 		JoyButton0 // up to sf::Joystick::ButtonCount buttons supported starting from JoyButton0
 	};
 
@@ -132,8 +133,8 @@ public:
 		ToggleRotateRight,
 		ToggleFlip,
 		ToggleRotateLeft,
-		ExitMenu,
-		ExitNoMenu,
+		Exit,
+		ExitToDesktop,
 		ScreenShot,
 		Configure,
 		RandomGame,
@@ -201,7 +202,19 @@ public:
 
 	static Command string_to_command( const std::string &s );
 
+	// these are the commands that are repeatable if the input key is held down
+	//
+	static bool is_repeatable_command( FeInputMap::Command c );
+
+	// return true if c is the "Up", "Down", "Left", "Right", or "Back" command
+	//
+	static bool is_ui_command( FeInputMap::Command c );
+
+
 private:
+
+	Command get_command_from_tracked_keys( const int joy_thresh ) const;
+
 	// TO allow for key combos, we maintain an initial map of all single input events, mapping
 	// them to all of the entries in m_inputs that contain the same single input
 	//
@@ -216,6 +229,10 @@ private:
 	std::vector < FeInputMapEntry > m_inputs;
 
 	std::vector< Command > m_defaults;
+
+	// Used to track the keys that are currently "down" and of interest
+	mutable std::set< FeInputSingle > m_tracked_keys;
+
 	int m_mmove_count; // counter of whether mouse moves are mapped
 };
 

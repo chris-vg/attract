@@ -298,12 +298,13 @@ const char *FeVM::transitionTypeStrings[] =
 		NULL
 };
 
-FeVM::FeVM( FeSettings &fes, FeFontContainer &defaultfont, FeWindow &wnd, FeSound &ambient_sound )
+FeVM::FeVM( FeSettings &fes, FeFontContainer &defaultfont, FeWindow &wnd, FeSound &ambient_sound, bool console_input )
 	: FePresent( &fes, defaultfont ),
 	m_window( wnd ),
 	m_overlay( NULL ),
 	m_ambient_sound( ambient_sound ),
 	m_redraw_triggered( false ),
+	m_process_console_input( console_input ),
 	m_script_cfg( NULL ),
 	m_script_id( -1 )
 {
@@ -548,7 +549,7 @@ bool FeVM::on_new_layout()
 			)
 		.Enum( _SC("Overlay"), Enumeration()
 			.Const( "Custom", 0 )
-			.Const( "Exit", FeInputMap::ExitMenu )
+			.Const( "Exit", FeInputMap::Exit )
 			.Const( "Displays", FeInputMap::DisplaysMenu )
 			.Const( "Filters", FeInputMap::FiltersMenu )
 			.Const( "Tags", FeInputMap::ToggleTags )
@@ -564,6 +565,7 @@ bool FeVM::on_new_layout()
 	}
 	info.Const( "System", FeRomInfo::LAST_INDEX ); // special cases with same value
 	info.Const( "NoSort", FeRomInfo::LAST_INDEX ); //
+	info.Const( "Overview", FeRomInfo::LAST_INDEX+1 ); //
 	ConstTable().Enum( _SC("Info"), info);
 
 	Enumeration transition;
@@ -612,6 +614,8 @@ bool FeVM::on_new_layout()
 
 	fe.Bind( _SC("Image"),
 		DerivedClass<FeImage, FeBasePresentable, NoConstructor>()
+		.Prop(_SC("origin_x"), &FeImage::get_origin_x, &FeImage::set_origin_x )
+		.Prop(_SC("origin_y"), &FeImage::get_origin_y, &FeImage::set_origin_y )
 		.Prop(_SC("skew_x"), &FeImage::get_skew_x, &FeImage::set_skew_x )
 		.Prop(_SC("skew_y"), &FeImage::get_skew_y, &FeImage::set_skew_y )
 		.Prop(_SC("pinch_x"), &FeImage::get_pinch_x, &FeImage::set_pinch_x )
@@ -1009,10 +1013,36 @@ void FeVM::set_for_callback( const FeCallback &c )
 	m_script_id = c.m_sid;
 }
 
+bool FeVM::process_console_input()
+{
+	if ( !m_process_console_input )
+		return false;
+
+	std::string script;
+	if ( !get_console_stdin( script ) )
+		return false;
+
+	bool retval=false;
+	try
+	{
+		Sqrat::Script sc;
+		sc.CompileString( script );
+		sc.Run();
+
+		retval = true;
+	}
+	catch( Sqrat::Exception e )
+	{
+		std::cerr << "Error: " << script << " - " << e.Message() << std::endl;
+	}
+
+	return retval;
+}
+
 bool FeVM::on_tick()
 {
 	using namespace Sqrat;
-	m_redraw_triggered = false;
+	m_redraw_triggered = process_console_input();
 
 	for ( std::vector<FeCallback>::iterator itr = m_ticks.begin();
 		itr != m_ticks.end(); )
@@ -1913,7 +1943,7 @@ bool FeVM::cb_plugin_command( const char *command,
 {
 	Sqrat::Function func( obj, fn );
 	return run_program( clean_path( command ),
-				args, my_callback, (void *)&func );
+				args, "", my_callback, (void *)&func );
 }
 
 bool FeVM::cb_plugin_command( const char *command,
@@ -1926,12 +1956,12 @@ bool FeVM::cb_plugin_command( const char *command,
 
 bool FeVM::cb_plugin_command( const char *command, const char *args )
 {
-	return run_program( clean_path( command ), args );
+	return run_program( clean_path( command ), args, "" );
 }
 
 bool FeVM::cb_plugin_command_bg( const char *command, const char *args )
 {
-	return run_program( clean_path( command ), args, NULL, NULL, false );
+	return run_program( clean_path( command ), args, "", NULL, NULL, false );
 }
 
 const char *FeVM::cb_path_expand( const char *path )
@@ -1947,7 +1977,9 @@ const char *FeVM::cb_game_info( int index, int offset, int filter_offset )
 	HSQUIRRELVM vm = Sqrat::DefaultVM::Get();
 	FeVM *fev = (FeVM *)sq_getforeignptr( vm );
 
-	if (( index > FeRomInfo::LAST_INDEX ) || ( index < 0 ))
+	static std::string retval;
+
+	if (( index > FeRomInfo::LAST_INDEX+1 ) || ( index < 0 ))
 	{
 		// the better thing to do would be to raise a squirrel error here
 		//
@@ -1959,13 +1991,24 @@ const char *FeVM::cb_game_info( int index, int offset, int filter_offset )
 		std::string emu_name = fev->m_feSettings->get_rom_info( filter_offset, offset, FeRomInfo::Emulator );
 		FeEmulatorInfo *emu = fev->m_feSettings->get_emulator( emu_name );
 
-		static std::string sys_name;
+		retval.clear();
 		if ( emu )
-			sys_name = emu->get_info( FeEmulatorInfo::System );
-		else
-			sys_name = "";
+			retval = emu->get_info( FeEmulatorInfo::System );
 
-		return sys_name.c_str();
+		return retval.c_str();
+	}
+	else if ( index == FeRomInfo::LAST_INDEX+1 )
+	{
+		// Overview
+		retval.clear();
+		if (( offset == 0 ) && ( filter_offset == 0 ))
+			retval = fev->m_feSettings->get_game_extra( FeSettings::Overview ).c_str();
+		//
+		//TODO: loading overview where there is a filter or index offset is not yet implemented
+		//
+
+		perform_substitution( retval, "\\n", "\n" );
+		return retval.c_str();
 	}
 
 	return (fev->m_feSettings->get_rom_info( filter_offset, offset, (FeRomInfo::Index)index )).c_str();

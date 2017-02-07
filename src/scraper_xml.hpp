@@ -61,7 +61,7 @@ protected:
 	FeXMLParser( const FeXMLParser & );
 	FeXMLParser &operator=( const FeXMLParser & );
 
-	bool parse_internal( const std::string &, const std::string & );
+	bool parse_internal( const std::string &, const std::string &, const std::string & );
 };
 
 class FeMapComp
@@ -84,6 +84,7 @@ public:
 	int progress_range;
 	int download_count;
 	std::string user_message;
+	std::string out_name;
 };
 
 class FeListXMLParser : private FeXMLParser
@@ -91,7 +92,7 @@ class FeListXMLParser : private FeXMLParser
 public:
 	FeListXMLParser( FeImporterContext &ctx );
 
-	bool parse_command( const std::string &base_command );
+	bool parse_command( const std::string &base_command, const std::string &work_dir );
 	bool parse_file( const std::string &filename );
 
 	std::vector<std::string> get_sl_extensions() { return m_sl_exts; };
@@ -119,7 +120,8 @@ class FeListSoftwareParser : private FeXMLParser
 {
 public:
 	FeListSoftwareParser( FeImporterContext &ctx );
-	bool parse( const std::string &command, const std::vector < std::string > &system_names );
+	bool parse( const std::string &command, const std::string &work_dir,
+		const std::vector < std::string > &system_names );
 
 private:
 	FeImporterContext &m_ctx;
@@ -197,6 +199,8 @@ public:
 
 	bool parse( const std::string &data );
 
+	bool get_overview( std::string & );
+
 private:
 	void start_element( const char *, const char ** );
 	void end_element( const char * );
@@ -213,6 +217,8 @@ private:
 	std::string m_players;
 	std::string m_manufacturer;
 	std::string m_platform;
+	std::string m_overview;
+	std::string m_overview_keep;
 
 	FeRomInfo &m_rom;
 	FeGameDBArt *m_art;

@@ -39,43 +39,30 @@
 
 void process_args( int argc, char *argv[],
 			std::string &config_path,
-			std::string &cmdln_font );
-
-// these are the commands that are repeatable if the input key is held down
-//
-bool is_repeatable_command( FeInputMap::Command c )
-{
-	return (( c == FeInputMap::PrevGame )
-		|| ( c == FeInputMap::NextGame )
-		|| ( c == FeInputMap::PrevPage )
-		|| ( c == FeInputMap::NextPage )
-		|| ( c == FeInputMap::NextLetter )
-		|| ( c == FeInputMap::PrevLetter )
-		|| ( c == FeInputMap::NextFavourite )
-		|| ( c == FeInputMap::PrevFavourite ));
-}
-
-// return true if c is the "Up", "Down", "Left", "Right", or "Back" command
-//
-bool is_ui_command( FeInputMap::Command c )
-{
-	return ( c < FeInputMap::Select );
-}
+			std::string &cmdln_font,
+			bool &process_console );
 
 int main(int argc, char *argv[])
 {
 	std::string config_path, cmdln_font;
 	bool launch_game = false;
+	bool process_console = false;
 
-	process_args( argc, argv, config_path, cmdln_font );
+	process_args( argc, argv, config_path, cmdln_font, process_console );
 
 	//
 	// Run the front-end
 	//
 	std::cout << "Starting " << FE_NAME << " " << FE_VERSION
-			<< " (" << get_OS_string() << ")" << std::endl;
+			<< " (" << get_OS_string() << ")";
+
+	if ( process_console )
+		std::cout << ", Script Console Enabled";
+
+	std::cout << std::endl;
 
 	FeSettings feSettings( config_path, cmdln_font );
+
 	feSettings.load();
 
 	std::string def_font_path, def_font_file;
@@ -107,7 +94,7 @@ int main(int argc, char *argv[])
 		hide_console();
 #endif
 
-	FeVM feVM( feSettings, def_font, window, soundsys.get_ambient_sound() );
+	FeVM feVM( feSettings, def_font, window, soundsys.get_ambient_sound(), process_console );
 	FeOverlay feOverlay( window, feSettings, feVM );
 	feVM.set_overlay( &feOverlay );
 
@@ -208,35 +195,45 @@ int main(int argc, char *argv[])
 		else if (( launch_game )
 			&& ( !soundsys.is_sound_event_playing( FeInputMap::Select ) ))
 		{
-			if ( feSettings.get_rom_info( 0, 0, FeRomInfo::Emulator ).compare( "@" ) == 0 )
+			const std::string &emu_name = feSettings.get_rom_info( 0, 0, FeRomInfo::Emulator );
+			if ( emu_name.compare( 0, 1, "@" ) == 0 )
 			{
-				// If the rom_info's emulator is set to "@" then this is a shortcut to another
-				// display, so instead of running a game we switch to the display specified in the
-				// rom_info's Romname field
-				//
-				std::string name = feSettings.get_rom_info( 0, 0, FeRomInfo::Romname );
-				int index = feSettings.get_display_index_from_name( name );
-
-				// if index not found or if we are already in the specified display, then
-				// jump to the altromname display instead
-				//
-				if (( index < 0 ) || ( index == feSettings.get_current_display_index() ))
+				if ( emu_name.size() > 1 )
 				{
-					name = feSettings.get_rom_info( 0, 0, FeRomInfo::AltRomname );
-					if ( !name.empty() )
-						index =  feSettings.get_display_index_from_name( name );
-				}
-
-				if ( index < 0 )
-				{
-					std::cerr << "Error resolving shortcut, Display `" << name << "' not found.";
+					// If emu name size >1 and  starts with a "@", then we treat the rest of the
+					// string as the signal we have to send
+					//
+					FeVM::cb_signal( emu_name.substr( 1 ).c_str() );
 				}
 				else
 				{
-					if ( feSettings.set_display( index ) )
-						feVM.load_layout();
+					// If emu name is just "@", then this is a shortcut to another display, so instead
+					// of running a game we switch to the display specified in the rom_info's Romname field
+					//
+					std::string name = feSettings.get_rom_info( 0, 0, FeRomInfo::Romname );
+					int index = feSettings.get_display_index_from_name( name );
+
+					// if index not found or if we are already in the specified display, then
+					// jump to the altromname display instead
+					//
+					if (( index < 0 ) || ( index == feSettings.get_current_display_index() ))
+					{
+						name = feSettings.get_rom_info( 0, 0, FeRomInfo::AltRomname );
+						if ( !name.empty() )
+							index =  feSettings.get_display_index_from_name( name );
+					}
+
+					if ( index < 0 )
+					{
+						std::cerr << "Error resolving shortcut, Display `" << name << "' not found.";
+					}
 					else
-						feVM.update_to_new_list( 0, true );
+					{
+						if ( feSettings.set_display( index ) )
+							feVM.load_layout();
+						else
+							feVM.update_to_new_list( 0, true );
+					}
 				}
 			}
 			else
@@ -288,9 +285,9 @@ int main(int argc, char *argv[])
 					}
 					break;
 
-				case sf::Event::KeyPressed:
-				case sf::Event::MouseButtonPressed:
-				case sf::Event::JoystickButtonPressed:
+				case sf::Event::KeyReleased:
+				case sf::Event::MouseButtonReleased:
+				case sf::Event::JoystickButtonReleased:
 					//
 					// We always want to reset the screen saver on these events,
 					// even if they aren't mapped otherwise (mapped events cause
@@ -359,8 +356,8 @@ int main(int argc, char *argv[])
 
 				move_state=FeInputMap::LAST_COMMAND;
 
-				if ( ( is_ui_command( c ) && ( c != FeInputMap::Back ) )
-					|| is_repeatable_command( c ) )
+				if ( ( FeInputMap::is_ui_command( c ) && ( c != FeInputMap::Back ) )
+					|| FeInputMap::is_repeatable_command( c ) )
 				{
 					// setup variables to test for when the navigation keys are held down
 					move_state = c;
@@ -372,13 +369,27 @@ int main(int argc, char *argv[])
 			//
 			// Map Up/Down/Left/Right/Back to their default action now
 			//
-			if ( is_ui_command( c ) )
+			if ( FeInputMap::is_ui_command( c ) )
 			{
 				//
 				// Give the script the option to handle the (pre-map) action.
 				//
 				if ( feVM.script_handle_event( c ) )
 				{
+					redraw=true;
+					continue;
+				}
+
+				//
+				// If FE is configured to show displays menu on startup, then the "Back" UI
+				// button goes back to that menu accordingly...
+				//
+				if (( c == FeInputMap::Back )
+					&& ( feSettings.get_startup_mode() == FeSettings::ShowDisplaysMenu )
+					&& ( feSettings.get_present_state() == FeSettings::Layout_Showing )
+					&& ( feSettings.get_current_display_index() >= 0 ))
+				{
+					FeVM::cb_signal( "displays_menu" );
 					redraw=true;
 					continue;
 				}
@@ -440,29 +451,16 @@ int main(int argc, char *argv[])
 				// handle the things that fePresent doesn't do
 				switch ( c )
 				{
-				case FeInputMap::ExitMenu:
+				case FeInputMap::Exit:
 					{
-						int retval = feOverlay.confirm_dialog(
-							"Exit Attract-Mode?",
-							"",
-							FeInputMap::ExitMenu );
+						if ( feOverlay.common_exit() )
+							exit_selected=true;
 
-						//
-						// retval is 0 if the user confirmed exit.
-						// it is <0 if we are being forced to close
-						//
-						if ( retval < 1 )
-						{
-							exit_selected = true;
-							if ( retval == 0 )
-								feSettings.exit_command();
-						}
-						else
-							redraw=true;
+						redraw=true;
 					}
 					break;
 
-				case FeInputMap::ExitNoMenu:
+				case FeInputMap::ExitToDesktop:
 					exit_selected = true;
 					break;
 
@@ -510,13 +508,29 @@ int main(int argc, char *argv[])
 
 				case FeInputMap::DisplaysMenu:
 					{
+						if ( !feSettings.get_info( FeSettings::MenuLayout ).empty() )
+						{
+							//
+							// If user has configured a custom layout for the display
+							// menu, then setting display to -1 and loading will
+							// bring up the displays menu using that layout
+							//
+							feSettings.set_display(-1);
+							feVM.load_layout( true );
+							redraw=true;
+							break;
+						}
+						//
+						// If no custom layout is configured, then we simply show the
+						// displays menu the same way as any other popup menu...
+						//
+
 						std::vector<std::string> disp_names;
 						std::vector<int> disp_indices;
 						int current_idx;
 
-						feSettings.get_display_menu( disp_names, disp_indices, current_idx );
 						std::string title;
-						feSettings.get_resource( "Displays", title );
+						feSettings.get_displays_menu( title, disp_names, disp_indices, current_idx );
 
 						int exit_opt=-999;
 						if ( feSettings.get_info_bool( FeSettings::DisplaysMenuExit ) )
@@ -541,8 +555,8 @@ int main(int argc, char *argv[])
 
 							if ( sel_idx == exit_opt )
 							{
-								exit_selected = true;
-								feSettings.exit_command();
+								if ( feOverlay.common_exit() )
+									exit_selected = true;
 							}
 							else if ( sel_idx >= 0 )
 							{
@@ -671,7 +685,7 @@ int main(int argc, char *argv[])
 				if (( t > TRIG_CHANGE_MS ) && ( t - move_last_triggered > feSettings.selection_speed() ))
 				{
 					FeInputMap::Command ms = move_state;
-					if ( is_ui_command( ms ) )
+					if ( FeInputMap::is_ui_command( ms ) )
 					{
 						//
 						// Give the script the option to handle the (pre-map) action.
@@ -684,7 +698,7 @@ int main(int argc, char *argv[])
 						else
 						{
 							ms = feSettings.get_default_command( ms );
-							if ( !is_repeatable_command( ms ) )
+							if ( !FeInputMap::is_repeatable_command( ms ) )
 								ms = FeInputMap::LAST_COMMAND;
 						}
 					}
@@ -770,10 +784,10 @@ int main(int argc, char *argv[])
 				// "End Navigation" stuff now
 				//
 				FeInputMap::Command ms = move_state;
-				if ( is_ui_command( ms ) )
+				if ( FeInputMap::is_ui_command( ms ) )
 					ms = feSettings.get_default_command( ms );
 
-				if ( is_repeatable_command( ms ) )
+				if ( FeInputMap::is_repeatable_command( ms ) )
 					feVM.on_end_navigation();
 
 				move_state = FeInputMap::LAST_COMMAND;

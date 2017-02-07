@@ -24,6 +24,15 @@ class UserConfig {
 
 	</ label="Preserve Aspect Ratio", help="Preserve the aspect ratio of screensaver snaps/videos", options="Yes,No", order=7 />
 	preserve_ar="No";
+
+	</ label="Blank Screen Time", help="Minutes before switching to blank screen (low power) mode.   Set this to 0 to disable.", order=8 />
+	blank_time="120";
+
+	</ label="Blank Screen Start Command", help="The command line to run when blank screen (low power) mode starts (to turn the monitor off, for example).", order=9 />
+	blank_start_cmd="";
+
+	</ label="Blank Screen Stop Command", help="The command line to run when blank screen (low power) mode stops (to turn the monitor back on, for example).", order=10 />
+	blank_stop_cmd="";
 }
 
 local actual_rotation = (fe.layout.base_rotation + fe.layout.toggle_rotation)%4;
@@ -650,14 +659,33 @@ if ( modes.len() == 0 )
 local current_mode = default_mode;
 local first_time = true;
 
+local blank_time = 0;
+try { blank_time = config[ "blank_time" ].tointeger() * 60000; } catch (e) {};
+
+local do_blank=false;
+
 fe.add_ticks_callback( "saver_tick" );
 
 //
 // saver_tick gets called repeatedly during screensaver.
-// stime = number of milliseconds since screensaver began.
+// ttime = number of milliseconds since screensaver began.
 //
 function saver_tick( ttime )
 {
+	if ( do_blank )
+		return;
+
+	if ( blank_time && ( ttime > blank_time ))
+	{
+		current_mode.reset();
+		do_blank = true;
+
+		if ( config[ "blank_start_cmd" ].len() > 0 )
+			system( config[ "blank_start_cmd" ] );
+
+		return;
+	}
+
 	if ( first_time ) // special case for initializing the very first mode
 	{
 		current_mode.init( ttime );
@@ -687,6 +715,16 @@ function saver_tick( ttime )
 	{
 		current_mode.on_tick( ttime );
 	}
+}
+
+fe.add_transition_callback( "saver_transition" );
+function saver_transition( ttype, var, ttime )
+{
+	if (( ttype == Transition.EndLayout ) && ( do_blank )
+			&& ( config[ "blank_stop_cmd" ].len() > 0 ))
+		system( config[ "blank_stop_cmd" ] );
+
+	return false;
 }
 
 fe.add_signal_handler( "saver_signal_handler" );

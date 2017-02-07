@@ -21,9 +21,9 @@
  */
 
 
-#include "fe_window.hpp"
-#include "fe_settings.hpp"
 #include "fe_util.hpp"
+#include "fe_settings.hpp"
+#include "fe_window.hpp"
 
 #ifdef SFML_SYSTEM_WINDOWS
 #define WIN32_LEAN_AND_MEAN
@@ -144,25 +144,32 @@ void FeWindow::onCreate()
 		height += 2;
 	}
 
-	SetWindowPos(hw, HWND_TOP, left, top,
-		width, height, SWP_FRAMECHANGED);
+	SetWindowPos( hw,
+		m_fes.get_window_mode() == FeSettings::Fullscreen ? HWND_BOTTOM : HWND_TOP,
+		left, top, width, height, SWP_FRAMECHANGED);
 
 	// As of 2.1, SFML caches the window size. We call setSize below to update SFML appropriately
 	setSize( sf::Vector2u( width, height ) );
 
 	ShowWindow(hw, SW_SHOW);
 	SetFocus( hw );
-#endif
 
-#ifdef USE_XINERAMA
-	if ( m_fes.get_info_bool( FeSettings::MultiMon ) )
-	{
-		int x, y, width, height;
-		get_xinerama_geometry( x, y, width, height );
+#elif defined(USE_XLIB)
+	//
+	// Notes: if xinerama and multimon are enabled, this should set our window to cover all available
+	// monitors
+	//
+	// If multimon is disabled, this fixes positioning problems that SFML(?) seems to have where
+	// the window contents aren't drawn in the correct place vertically on fullscreen/fillscreen modes
+	//
+	int x, y, width, height;
+	get_x11_geometry(
+		m_fes.get_info_bool( FeSettings::MultiMon ) && !is_windowed_mode( m_fes.get_window_mode() ),
+		x, y, width, height );
 
-		setPosition( sf::Vector2i( x, y ) );
-		setSize( sf::Vector2u( width, height ) );
-	}
+	setPosition( sf::Vector2i( x, y ) );
+	setSize( sf::Vector2u( width, height ) );
+
 #endif
 
 	setVerticalSyncEnabled(true);
@@ -184,6 +191,11 @@ void FeWindow::initial_create()
 	};
 
 	int win_mode = m_fes.get_window_mode();
+
+#ifdef USE_XINERAMA
+	if ( m_fes.get_info_bool( FeSettings::MultiMon ) && ( win_mode != FeSettings::Default ))
+		std::cout << " ! NOTE: Use the 'Fill Screen' window mode if you want multiple monitor support to function correctly" << std::endl;
+#endif
 
 	// Create window
 	create(
@@ -218,6 +230,23 @@ void FeWindow::initial_create()
 		sf::Mouse::setPosition( sf::Vector2i( wsize.x / 2, wsize.y / 2 ), *this );
 }
 
+void launch_callback( void *o )
+{
+#if defined(SFML_SYSTEM_LINUX)
+	//
+	// On Linux, fullscreen mode is confirmed to block the emulator
+	// from running...  So we close our main window each time we run
+	// an emulator and then recreate it (!) when the emulator is done.
+	//
+	FeWindow *win = (FeWindow *)o;
+	if ( win->m_fes.get_window_mode() == FeSettings::Fullscreen )
+	{
+		sf::sleep( sf::milliseconds( 1000 ) );
+		win->close(); // this fixes raspi version (w/sfml-pi) obscuring daphne (and others?)
+	}
+#endif
+}
+
 bool FeWindow::run()
 {
 #ifndef SFML_SYSTEM_MACOS
@@ -238,20 +267,6 @@ bool FeWindow::run()
 
 	sf::Mouse::setPosition( hide_pos );
 
-#ifdef SFML_SYSTEM_LINUX
-	//
-	// On Linux, fullscreen mode is confirmed to block the emulator
-	// from running...  So we close our main window each time we run
-	// an emulator and then recreate it when the emulator is done.
-	//
-	bool recreate_window=false;
-	if ( m_fes.get_window_mode() == FeSettings::Fullscreen )
-	{
-		close();
-		recreate_window=true;
-	}
-#endif
-
 	sf::Clock timer;
 
 	//
@@ -261,7 +276,7 @@ bool FeWindow::run()
 	// for focus to return to Attract-Mode if this value is set greater than 0
 	//
 	int min_run;
-	m_fes.run( min_run );
+	m_fes.run( min_run, launch_callback, this );
 
 	if ( min_run > 0 )
 	{
@@ -292,10 +307,14 @@ bool FeWindow::run()
 	}
 
 #if defined(SFML_SYSTEM_LINUX)
-	if ( recreate_window )
+	if ( m_fes.get_window_mode() == FeSettings::Fullscreen )
 	{
-		sf::VideoMode mode = sf::VideoMode::getDesktopMode();
-		create( mode, "Attract-Mode", sf::Style::Fullscreen );
+		//
+		// On linux fullscreen mode we hide our window after launching the program.  Simply showing
+		// the window again doesn't work right (focus doesn't come back), so we close the window
+		// and recreate it completely
+		//
+		initial_create();
 	}
 #elif defined(SFML_SYSTEM_MACOS)
 	osx_take_focus();
@@ -308,6 +327,7 @@ bool FeWindow::run()
 	// Empty the window event queue, so we don't go triggering other
 	// right away after running an emulator
 	sf::Event ev;
+
 	while (isOpen() && pollEvent(ev))
 	{
 		if ( ev.type == sf::Event::Closed )

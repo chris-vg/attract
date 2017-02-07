@@ -248,7 +248,8 @@ bool my_parse_callback( const char *buff, void *opaque )
 
 bool FeXMLParser::parse_internal(
 		const std::string &prog,
-		const std::string &args )
+		const std::string &args,
+		const std::string &work_dir )
 {
 	struct user_data_struct ud;
 	ud.parsed_xml = false;
@@ -261,7 +262,7 @@ bool FeXMLParser::parse_internal(
 	XML_SetElementHandler( ud.parser, exp_start_element, exp_end_element );
 	XML_SetCharacterDataHandler( ud.parser, exp_handle_data );
 
-	run_program( prog, args, my_parse_callback, (void *)&ud );
+	run_program( prog, args, work_dir, my_parse_callback, (void *)&ud );
 
 	// need to pass true to XML Parse on last line
 	XML_Parse( ud.parser, 0, 0, XML_TRUE );
@@ -618,7 +619,7 @@ void FeListXMLParser::post_parse()
 	}
 }
 
-bool FeListXMLParser::parse_command( const std::string &prog )
+bool FeListXMLParser::parse_command( const std::string &prog, const std::string &work_dir )
 {
 	pre_parse();
 
@@ -636,12 +637,12 @@ bool FeListXMLParser::parse_command( const std::string &prog )
 		{
 			if ( !parse_internal( prog,
 					base_args + " "
-					+ (*itr).get_info( FeRomInfo::Romname ) ) )
+					+ (*itr).get_info( FeRomInfo::Romname ), work_dir ) )
 				ret_val = false;
 		}
 	}
 	else
-		ret_val = parse_internal( prog, base_args );
+		ret_val = parse_internal( prog, base_args, work_dir );
 
 	post_parse();
 	return ret_val;
@@ -891,6 +892,7 @@ void FeListSoftwareParser::set_info_values( FeRomInfo &r, int score )
 }
 
 bool FeListSoftwareParser::parse( const std::string &prog,
+		const std::string &work_dir,
 		const std::vector < std::string > &system_names )
 {
 	// First get our machine -listxml settings
@@ -912,7 +914,7 @@ bool FeListSoftwareParser::parse( const std::string &prog,
 		FeImporterContext temp( ignored, temp_list );
 		FeListXMLParser listxml( temp );
 
-		if (( listxml.parse_command( prog ) )
+		if (( listxml.parse_command( prog, work_dir ) )
 				&& ( !temp_list.empty() ))
 		{
 			FeRomInfo &ri = temp_list.front();
@@ -974,7 +976,7 @@ bool FeListSoftwareParser::parse( const std::string &prog,
 
 	// Now get the individual game -listsoftware settings
 	//
-	int retval=parse_internal( prog, system_name + " -listsoftware" );
+	int retval=parse_internal( prog, system_name + " -listsoftware", work_dir );
 
 	if ( !retval )
 	{
@@ -1175,6 +1177,7 @@ void FeGameDBParser::start_element(
 		m_players.clear();
 		m_manufacturer.clear();
 		m_platform.clear();
+		m_overview.clear();
 	}
 	else if (( strcmp( element, "ReleaseDate" ) == 0 )
 			|| ( strcmp( element, "genre" ) == 0 )
@@ -1183,6 +1186,7 @@ void FeGameDBParser::start_element(
 			|| ( strcmp( element, "Platform" ) == 0 )
 			|| ( strcmp( element, "GameTitle" ) == 0 )
 			|| ( strcmp( element, "title" ) == 0 )
+			|| ( strcmp( element, "Overview" ) == 0 )
 		)
 	{
 		m_element_open=true;
@@ -1279,6 +1283,8 @@ void FeGameDBParser::end_element( const char *element )
 			m_manufacturer = m_current_data;
 		else if ( strcmp( element, "Platform" ) == 0 )
 			m_platform = m_current_data;
+		else if ( strcmp( element, "Overview" ) == 0 )
+			m_overview = m_current_data;
 
 		else if ( m_art )
 		{
@@ -1336,6 +1342,7 @@ void FeGameDBParser::end_element( const char *element )
 				set_info_val( FeRomInfo::Category, m_category );
 				set_info_val( FeRomInfo::Players, m_players );
 				set_info_val( FeRomInfo::Manufacturer, m_manufacturer );
+				m_overview_keep.swap( m_overview );
 
 				if ( m_art )
 				{
@@ -1378,6 +1385,26 @@ void FeGameDBParser::set_info_val( FeRomInfo::Index i, const std::string &v )
 {
 	if ( m_rom.get_info( i ).empty() )
 		m_rom.set_info( i, v );
+}
+
+bool FeGameDBParser::get_overview( std::string &overview )
+{
+	if ( m_overview_keep.empty() )
+		return false;
+
+	//
+	// escape newlines in m_overview
+	//
+	size_t pos1=0, pos=0;
+	while ( ( pos = m_overview_keep.find( "\n", pos1 ) ) != std::string::npos )
+	{
+		overview += m_overview_keep.substr( pos1, pos-pos1 );
+		overview += "\\n";
+		pos1 = pos+1;
+	}
+	overview += m_overview_keep.substr( pos1 );
+
+	return true;
 }
 
 bool FeGameDBParser::parse( const std::string &data )

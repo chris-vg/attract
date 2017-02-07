@@ -58,7 +58,7 @@ class UserConfig </ help="Hyperspin Layout: " + fe.script_dir + ::file_to_load /
    show_prompts="yes";
 
    </ label="Animation Speed", help="Set animation speed", order=7, options="default,2X,4X" />
-   speed="default";
+   speed="4X";
 };
 
 local my_config = fe.get_config();
@@ -205,13 +205,22 @@ function get_system_match_map( idx=-1 )
 {
 	local i = idx;
 	if ( i == -1 )
+	{
 		i = fe.list.display_index;
+		if ( i<0 )
+			i=0;
+	}
 
 	local smm = [];
 	smm.push( fe.displays[i].name.tolower() );
 
 	if ( idx < 0 )
 	{
+		if ( fe.list.display_index < 0 ) // this means we are showing the 'displays menu' w/ custom layout
+			smm.push( fe.game_info( Info.AltRomname ) );
+		else
+			smm.push( fe.game_info( Info.Emulator ) );
+
 		foreach ( t in split( fe.game_info( Info.System), ";" ) )
 			smm.push( t );
 	}
@@ -296,7 +305,7 @@ function get_theme_file( theme_d, match_map )
 		if ( default_theme.len() < 1 )
 		{
 			print( "Couldn't find hyperspin theme or default: "
-				+ fe.game_info( Info.Name ) + "\n" );
+				+ fe.game_info( Info.Name ) + " (" + theme_d + ")\n" );
 		}
 
 		theme = default_theme;
@@ -801,6 +810,7 @@ function load_override_transition( sys_d, match_map )
 // animate module's transition handling
 //
 local call_animate=false;
+local w_alpha = 1000;
 
 fe.add_transition_callback( "hs_transition" );
 function hs_transition( ttype, var, ttime )
@@ -825,6 +835,10 @@ function hs_transition( ttype, var, ttime )
 
 		setup_prompts( false );
 		local hs_sys = get_hs_system_dir();
+
+		if ( fe.list.display_index < 0 ) // this means we are showing the 'displays menu' w/ custom layout
+			hs_sys = work_d + "Main Menu/";
+
 		local mm = get_match_map();
 
 		if ( override_lag_ms <= 0 )
@@ -838,6 +852,7 @@ function hs_transition( ttype, var, ttime )
 		break;
 
 	case Transition.ToNewSelection:
+        w_alpha = 1000;
 		if ( override_lag_ms <=  0 )
 			break;
 
@@ -967,8 +982,34 @@ local wheel_w = 300;
 local wheel_x = [ flw*0.70, flw*0.695, flw*0.656, flw*0.625, flw*0.60, flw*0.58, flw*0.54, flw*0.58, flw*0.60, flw*0.625, flw*0.656, flw*0.66, ];
 local wheel_y = [ -flh*0.22, -flh*0.105, flh*0.0, flh*0.105, flh*0.215, flh*0.325, flh*0.436, flh*0.61, flh*0.72 flh*0.83, flh*0.935, flh*0.99, ]
 local wheel_w = [ wheel_w, wheel_w, wheel_w, wheel_w, wheel_w, wheel_w, wheel_w*1.5, wheel_w, wheel_w, wheel_w, wheel_w, wheel_w ];
-local wheel_a = [  80,  80,  80,  80,  80,  80, 255,  80,  80,  80,  80,  80, ];
+local wheel_a = [  130,  130,  130,  130,  130,  130, 255,  130,  130,  130,  130,  130, ];
 local wheel_r = [  30,  25,  20,  15,  10,   5,   0, -10, -15, -20, -25, -30, ];
+//
+// Wheel alpha
+//
+fe.add_ticks_callback( "hs_wheel_alpha" );
+function hs_wheel_alpha( ttime )
+{
+    if (w_alpha > 0) {
+        w_alpha = w_alpha - 10;
+        if (w_alpha < 0) {
+            w_alpha = 0;
+        }
+        for (local i=0; i < wheel.m_objs.len(); i++) {
+            if (i == 5) {
+                if (w_alpha < wheel_a[i+1]) {
+                    wheel.m_objs[i].alpha = w_alpha;
+                }
+            } else if (w_alpha <= 255 + wheel_a[i+1]) {
+if (w_alpha >= 255) {
+                wheel.m_objs[i].alpha = w_alpha - 255;
+} else {
+                wheel.m_objs[i].alpha = 0;
+}
+            }
+        }
+    }
+}
 
 class WheelEntry extends ConveyorSlot
 {

@@ -52,6 +52,7 @@
 #include <fcntl.h>
 #else
 #include <sys/wait.h>
+#include <sys/ioctl.h>
 #include <pwd.h>
 #include <signal.h>
 #include <errno.h>
@@ -61,9 +62,13 @@
 #include "fe_util_osx.hpp"
 #endif
 
-#ifdef USE_XINERAMA
-#include <X11/extensions/Xinerama.h>
+#ifdef USE_XLIB
+#include <X11/Xlib.h>
+ #ifdef USE_XINERAMA
+ #include <X11/extensions/Xinerama.h>
+ #endif
 #endif
+
 
 namespace {
 
@@ -240,8 +245,7 @@ std::string clean_path( const std::string &path, bool add_trailing_slash )
 #ifdef SFML_SYSTEM_WINDOWS
 			&& (retval[retval.size()-1] != '\\')
 #endif
-			&& (retval[retval.size()-1] != '/')
-			&& (directory_exists(retval)) )
+			&& (retval[retval.size()-1] != '/'))
 		retval += '/';
 
 	return retval;
@@ -713,18 +717,31 @@ const char *get_OS_string()
 
 
 bool run_program( const std::string &prog,
-	const::std::string &args,
+	const std::string &args,
+	const std::string &cwork_dir,
 	output_callback_fn callback,
 	void *opaque,
 	bool block,
 	const std::string &exit_hotkey,
-	int joy_thresh )
+	int joy_thresh,
+	launch_callback_fn launch_cb,
+	void *launch_opaque )
 {
 	const int POLL_FOR_EXIT_MS=50;
 
 	std::string comstr( prog );
 	comstr += " ";
 	comstr += args;
+
+	std::string work_dir = cwork_dir;
+	if ( work_dir.empty() )
+	{
+		// If no working directory provided, try to divine one from the program name
+		//
+		size_t pos = prog.find_last_of( "/\\" );
+		if ( pos != std::string::npos )
+			work_dir = prog.substr( 0, pos );
+	}
 
 #ifdef SFML_SYSTEM_WINDOWS
 	HANDLE child_output_read=NULL;
@@ -753,13 +770,10 @@ bool run_program( const std::string &prog,
 	LPSTR cmdline = new char[ comstr.length() + 1 ];
 	strncpy( cmdline, comstr.c_str(), comstr.length() + 1 );
 
-	LPSTR path = NULL;
-	size_t pos = prog.find_last_of( "/\\" );
-	if ( pos != std::string::npos )
-	{
-		path = new char[ pos + 1 ];
-		strncpy( path, prog.substr( 0, pos ).c_str(), pos + 1 );
-	}
+	DWORD current_wd_len = GetCurrentDirectory( 0, NULL );
+	LPSTR current_wd = new char[ current_wd_len ];
+	GetCurrentDirectory( current_wd_len, current_wd );
+	SetCurrentDirectory( work_dir.c_str() );
 
 	bool ret = CreateProcess( NULL,
 		cmdline,
@@ -768,9 +782,12 @@ bool run_program( const std::string &prog,
 		( NULL == callback ) ? FALSE : TRUE,
 		0,
 		NULL,
-		path,
+		NULL, // use current directory (set above) as working directory for the process
 		&si,
 		&pi );
+
+	SetCurrentDirectory( current_wd );
+	delete [] current_wd;
 
 	// Parent process - close the child write handle after child created
 	if ( child_output_write )
@@ -779,9 +796,6 @@ bool run_program( const std::string &prog,
 	//
 	// Cleanup our allocated values now
 	//
-	if ( path )
-		delete [] path;
-
 	delete [] cmdline;
 
 	if ( ret == false )
@@ -810,6 +824,9 @@ bool run_program( const std::string &prog,
 
 	if ( child_output_read )
 		CloseHandle( child_output_read );
+
+	if ( launch_cb )
+		launch_cb( launch_opaque );
 
 	DWORD timeout = ( callback || exit_hotkey.empty() )
 		? INFINITE : POLL_FOR_EXIT_MS;
@@ -901,12 +918,9 @@ bool run_program( const std::string &prog,
 			close( mypipe[1] );
 		}
 
-		{
-			size_t pos = prog.find_last_of( "/" );
-			if ( pos != std::string::npos )
-				if (chdir( prog.substr( 0, pos ).c_str() ) != 0)
-					std::cerr << "Warning, chdir(" << prog.substr( 0, pos ) << ") failed.";
-		}
+		if ( !work_dir.empty() && ( chdir( work_dir.c_str() ) != 0 ) )
+			std::cerr << "Warning, chdir(" << work_dir << ") failed.";
+
 		execvp( prog.c_str(), arg_list );
 
 		// execvp doesn't return unless there is an error.
@@ -936,6 +950,9 @@ bool run_program( const std::string &prog,
 			fclose( fp );
 			close( mypipe[0] );
 		}
+
+		if ( launch_cb )
+			launch_cb( launch_opaque );
 
 		if ( block )
 		{
@@ -1034,13 +1051,13 @@ std::basic_string<sf::Uint32> clipboard_get_content()
 	return retval;
 }
 
-#ifdef USE_XINERAMA
+#if defined(USE_XLIB)
 //
 // We use this in fe_window but implement it here because the XWindows
 // namespace (Window, etc) clashes with the SFML namespace used in fe_window
 // (sf::Window)
 //
-void get_xinerama_geometry( int &x, int &y, int &width, int &height )
+void get_x11_geometry( bool multimon, int &x, int &y, int &width, int &height )
 {
 	x=0;
 	y=0;
@@ -1050,21 +1067,36 @@ void get_xinerama_geometry( int &x, int &y, int &width, int &height )
 	::Display *xdisp = XOpenDisplay( NULL );
 	int num=0;
 
+#ifdef USE_XINERAMA
 	XineramaScreenInfo *si=XineramaQueryScreens( xdisp, &num );
 
-	if ( num > 1 )
+	if ( multimon )
 	{
-		x=-si[0].x_org;
-		y=-si[0].y_org;
-	}
+		if ( num > 1 )
+		{
+			x=-si[0].x_org;
+			y=-si[0].y_org;
+		}
 
-	for ( int i=0; i<num; i++ )
+		for ( int i=0; i<num; i++ )
+		{
+			width = std::max( width, si[i].x_org + si[i].width );
+			height = std::max( height, si[i].y_org + si[i].height );
+		}
+	}
+	else
 	{
-		width = std::max( width, si[i].x_org + si[i].width );
-		height = std::max( height, si[i].y_org + si[i].height );
+		width = si[0].width;
+		height = si[0].height;
 	}
 
 	XFree( si );
+#else
+	::Screen *xscreen = XDefaultScreenOfDisplay( xdisp );
+	width = XWidthOfScreen( xscreen );
+	height = XHeightOfScreen( xscreen );
+#endif
+
 	XCloseDisplay( xdisp );
 }
 #endif
@@ -1184,3 +1216,28 @@ bool line_to_setting_and_value( const std::string &line,
 	return false;
 }
 
+bool get_console_stdin( std::string &str )
+{
+//
+// TODO: Implement non-blocking console input read on Windows
+// PeekNamedPipe() and ReadFile() ??
+//
+#ifndef SFML_SYSTEM_WINDOWS
+	int count=0;
+	ioctl( fileno(stdin), FIONREAD, &count );
+
+	while ( count > 0 )
+	{
+		char buf[count+1];
+		if ( read( fileno(stdin), buf, count ) < 0 )
+			break;
+
+		buf[count]=0;
+		str += buf;
+
+		ioctl( fileno(stdin), FIONREAD, &count );
+	}
+#endif
+
+	return ( !str.empty() );
+}

@@ -198,6 +198,7 @@ Manufacturer's name.  There are more examples below.
         game's emulator
       - `[SystemN]` - the last "System" name configured for the selected
         game's emulator
+      - `[Overview]` - the overview description for the selected game
    * Magic tokens can also be used to run a function defined in your layout
      or plugin's squirrel script to obtain the desired text.  These tokens are
      in the form `[!<function_name>]`.  When used, Attract-Mode will run the
@@ -672,6 +673,7 @@ Parameters:
       - `Info.PlayedTime`
       - `Info.FileIsAvailable`
       - `Info.System`
+      - `Info.Overview`
    * index_offset - the offset (from the current selection) of the game to
      retrieve info on.  i.e. -1=previous game, 0=current game, 1=next game...
      and so on.  Default value is 0.
@@ -802,7 +804,7 @@ Parameters:
       - "toggle_flip"
       - "toggle_rotate_left"
       - "exit"
-      - "exit_no_menu"
+      - "exit_to_desktop"
       - "screenshot"
       - "configure"
       - "random_game"
@@ -1182,8 +1184,10 @@ otherwise instantiated in a script.
 Properties:
 
    * `name` - Get the name of the current display.
-   * `display_index` - Gett the index of the current display.  Use the
+   * `display_index` - Get the index of the current display.  Use the
      `fe.set_display()` function if you want to change the current display.
+     If this value is less than 0, then the 'Displays Menu' (with a custom
+     layout) is currently showing.
    * `filter_index` - Get/set the index of the currently selected filter.
      (see `fe.filters` for the list of available filters).
    * `index` - Get/set the index of the currently selected game.
@@ -1346,16 +1350,16 @@ a script.
 
 Properties:
 
-   * `x` - Get/set x position of top left corner (in layout coordinates).
-   * `y` - Get/set y position of top left corner (in layout coordinates).
+   * `x` - Get/set x position of image (in layout coordinates).
+   * `y` - Get/set y position of image (in layout coordinates).
    * `width` - Get/set width of image (in layout coordinates), 0 if the
      image is unscaled.  Default value is 0.
    * `height` - Get/set height of image (in layout coordinates), if 0 the
      image is unscaled.  Default value is 0.
    * `visible` - Get/set whether image is visible (boolean).  Default value
      is `true`.
-   * `rotation` - Get/set rotation of image. Range is [0 ... 360].  Default
-     value is 0.
+   * `rotation` - Get/set rotation of image around its origin. Range is [0
+     ... 360].  Default value is 0.
    * `red` - Get/set red colour level for image. Range is [0 ... 255].
      Default value is 255.
    * `green` - Get/set green colour level for image. Range is [0 ... 255].
@@ -1396,6 +1400,12 @@ Properties:
      to display.  Default value is `texture_width`.
    * `subimg_height` - Get/set the height of the image texture sub-rectangle
      to display.  Default value is `texture_height`.
+   * `origin_x` - Get/set the x position of the local origin for the image.
+     The origin defines the centre point for any positioning or rotation of
+     the image.  Default origin in 0,0 (top-left corner).
+   * `origin_y` - Get/set the y position of the local origin for the image.
+     The origin defines the centre point for any positioning or rotation of
+     the image.  Default origin is 0,0 (top-left corner).
    * `video_flags` - [image & artwork only] Get/set video flags for this
      object.  These flags allow you to override Attract-Mode's default video
      playback behaviour.  Can be set to any combination of none or more of the
@@ -1506,6 +1516,17 @@ Notes:
       img.subimg_height = -1 * img.texture_height;
       img.subimg_y = img.texture_height;
    }
+````
+   * To rotate an image around its centre, set the origin_x and origin_y
+     values to one half of the image's width and height (respectively)
+     and then set the 'rotation' value accordingly
+
+```` squirrel
+
+   local img = fe.add_image( "img.png", 100, 100, 200, 200 );
+   img.origin_x = 100;
+   img.origin_y = 100;
+   img.rotation = 90; // rotate img around its centre
 ````
 
 <a name="Text" />

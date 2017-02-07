@@ -27,6 +27,7 @@
 #include "fe_info.hpp"
 #include "fe_romlist.hpp"
 #include "fe_input.hpp"
+#include "fe_util.hpp"
 
 extern const char *FE_ART_EXTENSIONS[];
 
@@ -109,6 +110,7 @@ public:
 		HideBrackets,
 		StartupMode,
 		ConfirmFavourites,
+		ConfirmExit,
 		MouseThreshold,
 		JoystickThreshold,
 		WindowMode,
@@ -124,10 +126,14 @@ public:
 		ScrapeWheels,
 		ScrapeFanArt,
 		ScrapeVids,
+		ScrapeMameDB,
+		ScrapeOverview,
 #ifdef SFML_SYSTEM_WINDOWS
 		HideConsole,
 #endif
 		VideoDecoder,
+		MenuPrompt, // 'Displays Menu' prompt
+		MenuLayout, // 'Displays Menu' layout
 		LAST_INDEX
 	};
 
@@ -137,7 +143,8 @@ public:
 	enum GameExtra
 	{
 		Executable =0, // custom executable to override the configured emulator executable
-		Arguments      // custom arguments to override the configured emulator arguments
+		Arguments,     // custom arguments to override the configured emulator arguments
+		Overview
 	};
 
 private:
@@ -146,6 +153,10 @@ private:
 	std::string m_exit_command;
 	std::string m_language;
 	std::string m_current_search_str;
+
+	std::string m_menu_prompt;		// 'Displays Menu" prompt
+	std::string m_menu_layout;		// 'Displays Menu' layout.  if blank, use built-in menu
+	std::string m_menu_layout_file;		// 'Displays Menu" toggled layout file
 
 	std::vector<std::string> m_font_paths;
 	std::vector<FeDisplayInfo> m_displays;
@@ -164,7 +175,7 @@ private:
 	FeLayoutInfo m_intro_params;
 	sf::IntRect m_mousecap_rect;
 
-	int m_current_display;
+	int m_current_display; // -1 if we are currently showing the 'displays menu' w/ custom layout
 	FeBaseConfigurable *m_current_config_object;
 	int m_ssaver_time;
 	int m_last_launch_display;
@@ -172,11 +183,12 @@ private:
 	int m_last_launch_rom;
 	int m_joy_thresh;		// [1..100], 100=least sensitive
 	int m_mouse_thresh;	// [1..100], 100=least sensitive
-	int m_current_search_index;
+	int m_current_search_index; // used when custom searching *AND* when showing 'Displays Menu' w/ custom layout
 	bool m_displays_menu_exit;
 	bool m_hide_brackets;
 	StartupModeType m_startup_mode;
 	bool m_confirm_favs;
+	bool m_confirm_exit;
 	bool m_track_usage;
 	bool m_multimon;
 	WindowType m_window_mode;
@@ -190,6 +202,8 @@ private:
 	bool m_scrape_wheels;
 	bool m_scrape_fanart;
 	bool m_scrape_vids;
+	bool m_scrape_mamedb;
+	bool m_scrape_overview;
 #ifdef SFML_SYSTEM_WINDOWS
 	bool m_hide_console;
 #endif
@@ -224,6 +238,15 @@ private:
 	bool thegamesdb_scraper( FeImporterContext & );
 	void apply_xml_import( FeImporterContext &, bool );
 
+	bool load_game_extras(
+		const std::string &romlist_name,
+		const std::string &romname,
+		std::map<GameExtra,std::string> &extras );
+
+	void save_game_extras(
+		const std::string &romlist_name,
+		const std::string &romname,
+		const std::map<GameExtra,std::string> &extras );
 
 public:
 	FeSettings( const std::string &config_dir,
@@ -289,7 +312,7 @@ public:
 	void init_mouse_capture( int window_x, int window_y );
 	bool test_mouse_reset( int mouse_x, int mouse_y ) const;
 
-	void run( int &minimum_run_seconds ); // run current selection
+	void run( int &minimum_run_seconds, launch_callback_fn launch_cb, void *launch_opaque ); // run current selection
 	int exit_command() const; // run configured exit command (if any)
 
 	void toggle_layout();
@@ -433,7 +456,7 @@ public:
 	// This info is only ever loaded for the currently selected game, and is not intended
 	// to be used in a filter
 	//
-	std::string get_game_extra( GameExtra id );
+	const std::string &get_game_extra( GameExtra id );
 	void set_game_extra( GameExtra id, const std::string &value );
 	void save_game_extras();
 
@@ -459,9 +482,11 @@ public:
 	bool get_info_bool( int index ) const;
 	bool set_info( int index, const std::string & );
 
-	void get_display_menu( std::vector<std::string> &names,
+	void get_displays_menu( std::string &title,
+		std::vector<std::string> &names,
 		std::vector<int> &indices,
 		int &current_idx ) const;
+
 	FeDisplayInfo *get_display( int index );
 	FeDisplayInfo *create_display( const std::string &n );
 	void delete_display( int index );

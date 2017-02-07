@@ -344,10 +344,22 @@ public:
 	void set_display( FeDisplayInfo *d, int index );
 };
 
+class FeDisplayMenuEditMenu : public FeBaseConfigMenu
+{
+private:
+	FeLayoutEditMenu m_layout_menu;
+public:
+	void get_options( FeConfigContext &ctx );
+	bool on_option_select( FeConfigContext &ctx,
+		FeBaseConfigMenu *& submenu );
+	bool save( FeConfigContext &ctx );
+};
+
 class FeDisplaySelMenu : public FeBaseConfigMenu
 {
 private:
 	FeDisplayEditMenu m_edit_menu;
+	FeDisplayMenuEditMenu m_menu_menu;
 
 public:
 	void get_options( FeConfigContext &ctx );

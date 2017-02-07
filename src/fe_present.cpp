@@ -161,9 +161,9 @@ void FePresent::init_monitors()
 	//
 	// We support multi-monitor setups on MS-Windows when in fullscreen or "fillscreen" mode
 	//
-#ifdef SFML_SYSTEM_WINDOWS
+#if defined(SFML_SYSTEM_WINDOWS)
 	if ( m_feSettings->get_info_bool( FeSettings::MultiMon )
-		&& ( m_feSettings->get_window_mode() != FeSettings::Window ))
+		&& !is_windowed_mode( m_feSettings->get_window_mode() ) )
 	{
 		EnumDisplayMonitors( NULL, NULL, my_mon_enum_proc, (LPARAM)&m_mon );
 
@@ -178,10 +178,8 @@ void FePresent::init_monitors()
 			(*itr).transform *= correction;
 	}
 	else
-#else
-#ifdef USE_XINERAMA
-	if ( m_feSettings->get_info_bool( FeSettings::MultiMon )
-		&& ( m_feSettings->get_window_mode() != FeSettings::Window ))
+#elif defined(USE_XINERAMA)
+	if ( 1 )
 	{
 		Display *xdisp = XOpenDisplay( NULL );
 		int num=0;
@@ -189,16 +187,29 @@ void FePresent::init_monitors()
 		XineramaScreenInfo *si=XineramaQueryScreens( xdisp, &num );
 		if ( si )
 		{
-			for ( int i=0; i<num; i++ )
+			if (( m_feSettings->get_info_bool( FeSettings::MultiMon ) )
+					&& ( !is_windowed_mode( m_feSettings->get_window_mode() )))
+			{
+				for ( int i=0; i<num; i++ )
+				{
+					FeMonitor mon(
+						si[i].screen_number,
+						si[i].width,
+						si[i].height );
+
+					mon.transform = sf::Transform().translate(
+						si[i].x_org,
+						si[i].y_org );
+
+					m_mon.push_back( mon );
+				}
+			}
+			else
 			{
 				FeMonitor mon(
-					si[i].screen_number,
-					si[i].width,
-					si[i].height );
-
-				mon.transform = sf::Transform().translate(
-					si[i].x_org,
-					si[i].y_org );
+					si[0].screen_number,
+					si[0].width,
+					si[0].height );
 
 				m_mon.push_back( mon );
 			}
@@ -208,7 +219,6 @@ void FePresent::init_monitors()
 		XCloseDisplay( xdisp );
 	}
 	else
-#endif // USE_XINERAMA
 #endif
 	{
 		//
@@ -647,11 +657,7 @@ const char *FePresent::get_display_name() const
 
 int FePresent::get_display_index() const
 {
-	int display = m_feSettings->get_current_display_index();
-	if ( display < 0 )
-		display=0;
-
-	return display;
+	return m_feSettings->get_current_display_index();
 }
 
 const char *FePresent::get_filter_name() const
@@ -1113,6 +1119,8 @@ void FePresent::pre_run()
 
 void FePresent::post_run()
 {
+	std::vector<FeSound *>::iterator its;
+
 #ifndef NO_MOVIE
 	//
 	// Re-establish openAL stuff now that we are back from the emulator
@@ -1123,14 +1131,16 @@ void FePresent::post_run()
 				itm != m_texturePool.end(); ++itm )
 		(*itm)->release_audio( false );
 
-	for ( std::vector<FeSound *>::iterator its=m_sounds.begin();
-				its != m_sounds.end(); ++its )
+	for ( its=m_sounds.begin(); its != m_sounds.end(); ++its )
 		(*its)->release_audio( false );
 #endif
 
 	for ( std::vector<FeBaseTextureContainer *>::iterator itm=m_texturePool.begin();
 				itm != m_texturePool.end(); ++itm )
 		(*itm)->set_vol( m_feSettings->get_play_volume( FeSoundInfo::Movie ) );
+
+	for ( its=m_sounds.begin(); its != m_sounds.end(); ++its )
+		(*its)->set_volume( m_feSettings->get_play_volume( FeSoundInfo::Sound ) );
 
 	set_video_play_state( m_playMovies );
 	on_transition( FromGame, FromToNoValue );

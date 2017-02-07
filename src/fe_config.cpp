@@ -351,7 +351,7 @@ bool FeEmulatorEditMenu::on_option_select(
 			for ( std::vector<std::string>::const_iterator itr = paths.begin();
 					itr != paths.end(); ++itr )
 			{
-				std::string rom_path = clean_path( *itr );
+				std::string rom_path = m_emulator->clean_path_with_wd( *itr );
 				if ( !directory_exists( rom_path ) )
 				{
 					if ( ctx.confirm_dialog( "Rom path '$1' not found, proceed anyways?",
@@ -1192,6 +1192,75 @@ void FeDisplayEditMenu::set_display( FeDisplayInfo *d, int index )
 	m_index=index;
 }
 
+void FeDisplayMenuEditMenu::get_options( FeConfigContext &ctx )
+{
+	ctx.set_style( FeConfigContext::EditList, "Configure / Displays Menu" );
+
+	std::string prompt_str = ctx.fe_settings.get_info( FeSettings::MenuPrompt );
+	ctx.add_optl( Opt::EDIT, "Menu Prompt", prompt_str, "_help_displays_menu_prompt" );
+
+	std::string default_str;
+	ctx.fe_settings.get_resource( "Default", default_str );
+
+	std::string layout = ctx.fe_settings.get_info( FeSettings::MenuLayout );
+
+	if ( layout.empty() )
+		layout = default_str;
+
+	std::vector<std::string> layouts;
+	ctx.fe_settings.get_layouts_list( layouts ); // this sorts the list
+	layouts.insert( layouts.begin(), default_str ); // force first enty to the 'default' string
+
+	ctx.add_optl( Opt::LIST, "Menu Style / Layout", layout, "_help_displays_menu_layout" );
+	ctx.back_opt().append_vlist( layouts );
+
+	std::vector<std::string> bool_opts( 2 );
+	ctx.fe_settings.get_resource( "Yes", bool_opts[0] );
+	ctx.fe_settings.get_resource( "No", bool_opts[1] );
+
+	ctx.add_optl( Opt::LIST,
+			"Allow Exit from 'Displays Menu'",
+			ctx.fe_settings.get_info_bool( FeSettings::DisplaysMenuExit ) ? bool_opts[0] : bool_opts[1],
+			"_help_displays_menu_exit" );
+	ctx.back_opt().append_vlist( bool_opts );
+
+	ctx.add_optl( Opt::SUBMENU, "Layout Options", "", "_help_display_layout_options" );
+	ctx.back_opt().opaque = 1;
+
+	FeBaseConfigMenu::get_options( ctx );
+}
+
+bool FeDisplayMenuEditMenu::on_option_select(
+		FeConfigContext &ctx, FeBaseConfigMenu *& submenu )
+{
+	FeMenuOpt &o = ctx.curr_opt();
+
+	if (( o.opaque == 1 ) && ( ctx.opt_list[1].get_vindex() != 0 ))
+	{
+		FeLayoutInfo &cfg = ctx.fe_settings.get_layout_config( ctx.opt_list[1].get_value() );
+		m_layout_menu.set_layout( &cfg );
+		submenu=&m_layout_menu;
+	}
+
+	return true;
+}
+
+bool FeDisplayMenuEditMenu::save( FeConfigContext &ctx )
+{
+	ctx.fe_settings.set_info( FeSettings::MenuPrompt, ctx.opt_list[0].get_value() );
+
+	std::string layout;
+	if ( ctx.opt_list[1].get_vindex() != 0 ) // if "Default" setting selected, leave layout variable empty
+		layout = ctx.opt_list[1].get_value();
+
+	ctx.fe_settings.set_info( FeSettings::MenuLayout, layout );
+
+	ctx.fe_settings.set_info( FeSettings::DisplaysMenuExit,
+			ctx.opt_list[2].get_vindex() == 0 ? FE_CFG_YES_STR : FE_CFG_NO_STR );
+
+	return true;
+}
+
 void FeDisplaySelMenu::get_options( FeConfigContext &ctx )
 {
 	ctx.set_style( FeConfigContext::SelectionList, "Configure / Displays" );
@@ -1204,6 +1273,9 @@ void FeDisplaySelMenu::get_options( FeConfigContext &ctx )
 			"", "_help_display_sel" );
 		ctx.back_opt().opaque = i;
 	}
+
+	ctx.add_optl( Opt::MENU, "'Displays Menu' Options", "", "_help_displays_menu" );
+	ctx.back_opt().opaque = 99999;
 
 	ctx.add_optl( Opt::MENU, "Add New Display", "", "_help_display_add" );
 	ctx.back_opt().opaque = 100000;
@@ -1221,6 +1293,12 @@ bool FeDisplaySelMenu::on_option_select(
 
 	FeDisplayInfo *d( NULL );
 	int index(0);
+
+	if ( o.opaque == 99999 )
+	{
+		submenu = &m_menu_menu;
+		return true;
+	}
 
 	if ( o.opaque == 100000 )
 	{
@@ -1634,6 +1712,12 @@ void FeScraperMenu::get_options( FeConfigContext &ctx )
 			"_help_scrape_vids" );
 	ctx.back_opt().append_vlist( bool_opts );
 
+	ctx.add_optl( Opt::LIST,
+			"Scrape mamedb.com (MAME only)",
+			ctx.fe_settings.get_info_bool( FeSettings::ScrapeMameDB ) ? bool_opts[0] : bool_opts[1],
+			"_help_scrape_mamedb" );
+	ctx.back_opt().append_vlist( bool_opts );
+
 	FeBaseConfigMenu::get_options( ctx );
 }
 
@@ -1656,6 +1740,9 @@ bool FeScraperMenu::save( FeConfigContext &ctx )
 
 	ctx.fe_settings.set_info( FeSettings::ScrapeVids,
 			ctx.opt_list[5].get_vindex() == 0 ? FE_CFG_YES_STR : FE_CFG_NO_STR );
+
+	ctx.fe_settings.set_info( FeSettings::ScrapeMameDB,
+			ctx.opt_list[6].get_vindex() == 0 ? FE_CFG_YES_STR : FE_CFG_NO_STR );
 
 	return true;
 }
@@ -1688,21 +1775,19 @@ void FeMiscMenu::get_options( FeConfigContext &ctx )
 			"_help_language" );
 	ctx.back_opt().append_vlist( disp_lang_list );
 
-	std::vector<std::string> bool_opts( 2 );
-	ctx.fe_settings.get_resource( "Yes", bool_opts[0] );
-	ctx.fe_settings.get_resource( "No", bool_opts[1] );
+	std::string winmode;
+	ctx.fe_settings.get_resource( FeSettings::windowModeDispTokens[ ctx.fe_settings.get_window_mode() ], winmode );
+	std::vector < std::string > modes;
+	i=0;
+	while ( FeSettings::windowModeDispTokens[i] != 0 )
+	{
+		modes.push_back( std::string() );
+		ctx.fe_settings.get_resource( FeSettings::windowModeDispTokens[ i ], modes.back() );
+		i++;
+	}
+	ctx.add_optl( Opt::LIST, "Window Mode", winmode, "_help_window_mode" );
+	ctx.back_opt().append_vlist( modes );
 
-	ctx.add_optl( Opt::LIST,
-			"Allow Exit from 'Displays Menu'",
-			ctx.fe_settings.get_info_bool( FeSettings::DisplaysMenuExit ) ? bool_opts[0] : bool_opts[1],
-			"_help_displays_menu_exit" );
-	ctx.back_opt().append_vlist( bool_opts );
-
-	ctx.add_optl( Opt::LIST,
-			"Hide Brackets in Game Title",
-			ctx.fe_settings.get_info_bool( FeSettings::HideBrackets ) ? bool_opts[0] : bool_opts[1],
-			"_help_hide_brackets" );
-	ctx.back_opt().append_vlist( bool_opts );
 
 	std::string startupmode;
 	ctx.fe_settings.get_resource( FeSettings::startupDispTokens[ ctx.fe_settings.get_startup_mode() ], startupmode );
@@ -1717,11 +1802,9 @@ void FeMiscMenu::get_options( FeConfigContext &ctx )
 	ctx.add_optl( Opt::LIST, "Startup Mode", startupmode, "_help_startup_mode" );
 	ctx.back_opt().append_vlist( startup_modes );
 
-	ctx.add_optl( Opt::LIST,
-			"Confirm Favourites",
-			ctx.fe_settings.get_info_bool( FeSettings::ConfirmFavourites ) ? bool_opts[0] : bool_opts[1],
-			"_help_confirm_favs" );
-	ctx.back_opt().append_vlist( bool_opts );
+	std::vector<std::string> bool_opts( 2 );
+	ctx.fe_settings.get_resource( "Yes", bool_opts[0] );
+	ctx.fe_settings.get_resource( "No", bool_opts[1] );
 
 	ctx.add_optl( Opt::LIST,
 			"Track Usage",
@@ -1733,6 +1816,18 @@ void FeMiscMenu::get_options( FeConfigContext &ctx )
 			"Enable Multiple Monitors",
 			ctx.fe_settings.get_info_bool( FeSettings::MultiMon ) ? bool_opts[0] : bool_opts[1],
 			"_help_multiple_monitors" );
+	ctx.back_opt().append_vlist( bool_opts );
+
+	ctx.add_optl( Opt::LIST,
+			"Hide Brackets in Game Title",
+			ctx.fe_settings.get_info_bool( FeSettings::HideBrackets ) ? bool_opts[0] : bool_opts[1],
+			"_help_hide_brackets" );
+	ctx.back_opt().append_vlist( bool_opts );
+
+	ctx.add_optl( Opt::LIST,
+			"Confirm Favourites",
+			ctx.fe_settings.get_info_bool( FeSettings::ConfirmFavourites ) ? bool_opts[0] : bool_opts[1],
+			"_help_confirm_favs" );
 	ctx.back_opt().append_vlist( bool_opts );
 
 	std::string filterwrapmode;
@@ -1748,6 +1843,12 @@ void FeMiscMenu::get_options( FeConfigContext &ctx )
 	ctx.add_optl( Opt::LIST, "Filter Wrap Mode", filterwrapmode, "_help_filter_wrap_mode" );
 	ctx.back_opt().append_vlist( wrap_modes );
 
+	ctx.add_optl( Opt::LIST,
+			"Confirm Exit",
+			ctx.fe_settings.get_info_bool( FeSettings::ConfirmExit ) ? bool_opts[0] : bool_opts[1],
+			"_help_confirm_exit" );
+	ctx.back_opt().append_vlist( bool_opts );
+
 	ctx.add_optl( Opt::EDIT,
 			"Exit Command",
 			ctx.fe_settings.get_info( FeSettings::ExitCommand ),
@@ -1762,19 +1863,6 @@ void FeMiscMenu::get_options( FeConfigContext &ctx )
 			"Font Path",
 			ctx.fe_settings.get_info( FeSettings::FontPath ),
 			"_help_font_path" );
-
-	std::string winmode;
-	ctx.fe_settings.get_resource( FeSettings::windowModeDispTokens[ ctx.fe_settings.get_window_mode() ], winmode );
-	std::vector < std::string > modes;
-	i=0;
-	while ( FeSettings::windowModeDispTokens[i] != 0 )
-	{
-		modes.push_back( std::string() );
-		ctx.fe_settings.get_resource( FeSettings::windowModeDispTokens[ i ], modes.back() );
-		i++;
-	}
-	ctx.add_optl( Opt::LIST, "Window Mode", winmode, "_help_window_mode" );
-	ctx.back_opt().append_vlist( modes );
 
 	std::vector < std::string > decoders;
 	std::string vid_dec;
@@ -1804,38 +1892,38 @@ bool FeMiscMenu::save( FeConfigContext &ctx )
 {
 	ctx.fe_settings.set_language( m_languages[ ctx.opt_list[0].get_vindex() ].language );
 
-	ctx.fe_settings.set_info( FeSettings::DisplaysMenuExit,
-			ctx.opt_list[1].get_vindex() == 0 ? FE_CFG_YES_STR : FE_CFG_NO_STR );
-
-	ctx.fe_settings.set_info( FeSettings::HideBrackets,
-			ctx.opt_list[2].get_vindex() == 0 ? FE_CFG_YES_STR : FE_CFG_NO_STR );
+	ctx.fe_settings.set_info( FeSettings::WindowMode,
+			FeSettings::windowModeTokens[ ctx.opt_list[1].get_vindex() ] );
 
 	ctx.fe_settings.set_info( FeSettings::StartupMode,
-			FeSettings::startupTokens[ ctx.opt_list[3].get_vindex() ] );
-
-	ctx.fe_settings.set_info( FeSettings::ConfirmFavourites,
-			ctx.opt_list[4].get_vindex() == 0 ? FE_CFG_YES_STR : FE_CFG_NO_STR );
+			FeSettings::startupTokens[ ctx.opt_list[2].get_vindex() ] );
 
 	ctx.fe_settings.set_info( FeSettings::TrackUsage,
-			ctx.opt_list[5].get_vindex() == 0 ? FE_CFG_YES_STR : FE_CFG_NO_STR );
+			ctx.opt_list[3].get_vindex() == 0 ? FE_CFG_YES_STR : FE_CFG_NO_STR );
 
 	ctx.fe_settings.set_info( FeSettings::MultiMon,
+			ctx.opt_list[4].get_vindex() == 0 ? FE_CFG_YES_STR : FE_CFG_NO_STR );
+
+	ctx.fe_settings.set_info( FeSettings::HideBrackets,
+			ctx.opt_list[5].get_vindex() == 0 ? FE_CFG_YES_STR : FE_CFG_NO_STR );
+
+	ctx.fe_settings.set_info( FeSettings::ConfirmFavourites,
 			ctx.opt_list[6].get_vindex() == 0 ? FE_CFG_YES_STR : FE_CFG_NO_STR );
 
 	ctx.fe_settings.set_info( FeSettings::FilterWrapMode,
 			FeSettings::filterWrapTokens[ ctx.opt_list[7].get_vindex() ] );
 
-	ctx.fe_settings.set_info( FeSettings::ExitCommand,
-			ctx.opt_list[8].get_value() );
+	ctx.fe_settings.set_info( FeSettings::ConfirmExit,
+			ctx.opt_list[8].get_vindex() == 0 ? FE_CFG_YES_STR : FE_CFG_NO_STR );
 
-	ctx.fe_settings.set_info( FeSettings::DefaultFont,
+	ctx.fe_settings.set_info( FeSettings::ExitCommand,
 			ctx.opt_list[9].get_value() );
 
-	ctx.fe_settings.set_info( FeSettings::FontPath,
+	ctx.fe_settings.set_info( FeSettings::DefaultFont,
 			ctx.opt_list[10].get_value() );
 
-	ctx.fe_settings.set_info( FeSettings::WindowMode,
-			FeSettings::windowModeTokens[ ctx.opt_list[11].get_vindex() ] );
+	ctx.fe_settings.set_info( FeSettings::FontPath,
+			ctx.opt_list[11].get_value() );
 
 	ctx.fe_settings.set_info( FeSettings::VideoDecoder,
 			ctx.opt_list[12].get_value() );
@@ -1860,8 +1948,8 @@ bool FeScriptConfigMenu::on_option_select(
 		FeInputMap::Command conflict( FeInputMap::LAST_COMMAND );
 		ctx.input_map_dialog( "Press Input", res, conflict );
 
-		if (( conflict == FeInputMap::ExitMenu )
-			|| ( conflict == FeInputMap::ExitNoMenu ))
+		if (( conflict == FeInputMap::Exit )
+			|| ( conflict == FeInputMap::ExitToDesktop ))
 		{
 			// Clear the mapping if the user pushed an exit button
 			res.clear();
@@ -2258,6 +2346,11 @@ void FeEditGameMenu::get_options( FeConfigContext &ctx )
 	ctx.opt_list[ FeRomInfo::PlayedCount ].opaque = 3;
 	ctx.opt_list[ FeRomInfo::PlayedTime ].opaque = 3;
 
+	ctx.add_optl( Opt::EDIT, "Overview",
+		ctx.fe_settings.get_game_extra( FeSettings::Overview ),
+		"_help_game_overview" );
+	ctx.back_opt().opaque = 4;
+
 	ctx.add_optl( Opt::EDIT, "Custom Executable",
 		ctx.fe_settings.get_game_extra( FeSettings::Executable ),
 		"_help_game_custom_executable" );
@@ -2314,6 +2407,7 @@ bool FeEditGameMenu::on_option_select( FeConfigContext &ctx, FeBaseConfigMenu *&
 		m_update_extras = true;
 		break;
 
+
 	case 100: // Delete Game
 		if ( ctx.confirm_dialog( "Delete game '$1'?", ctx.opt_list[1].get_value() ) )
 		{
@@ -2358,8 +2452,9 @@ bool FeEditGameMenu::save( FeConfigContext &ctx )
 
 	if ( m_update_extras )
 	{
-		ctx.fe_settings.set_game_extra( FeSettings::Executable, ctx.opt_list[border].get_value() );
-		ctx.fe_settings.set_game_extra( FeSettings::Arguments, ctx.opt_list[border+1].get_value() );
+		ctx.fe_settings.set_game_extra( FeSettings::Overview, ctx.opt_list[border].get_value() );
+		ctx.fe_settings.set_game_extra( FeSettings::Executable, ctx.opt_list[border+1].get_value() );
+		ctx.fe_settings.set_game_extra( FeSettings::Arguments, ctx.opt_list[border+2].get_value() );
 		ctx.fe_settings.save_game_extras();
 	}
 

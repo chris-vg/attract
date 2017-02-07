@@ -1,7 +1,7 @@
 /*
  *
  *  Attract-Mode frontend
- *  Copyright (C) 2013-15 Andrew Mickelson
+ *  Copyright (C) 2013-16 Andrew Mickelson
  *
  *  This file is part of Attract-Mode.
  *
@@ -37,7 +37,7 @@ extern const char *FE_WHITESPACE;
 // Utility functions for processing config files:
 //
 bool token_helper( const std::string &from,
-		size_t &pos, std::string &token, const char *sep=";" );
+	size_t &pos, std::string &token, const char *sep=";" );
 
 //
 // Substitute all occurrences of "from" that appear in "target" with
@@ -46,8 +46,8 @@ bool token_helper( const std::string &from,
 // returns the number of substitutions made
 //
 int perform_substitution( std::string &target,
-                           const std::string &from,
-                           const std::string &to );
+	const std::string &from,
+	const std::string &to );
 
 //
 //
@@ -57,22 +57,22 @@ std::string name_with_brackets_stripped( const std::string &name );
 // Case insensitive check if filename has the specified extension/ending.
 //
 bool tail_compare(
-         const std::string &filename,
-         const std::string &extension );
+	const std::string &filename,
+	const std::string &extension );
 
 bool tail_compare(
-         const std::string &filename,
-         const std::vector<std::string> &ext_list );
+	const std::string &filename,
+	const std::vector<std::string> &ext_list );
 
 //
 // Case insensitive compare of one and two
 // returns 0 if equal
 //
-int icompare(
-			const std::string &one,
-			const std::string &two );
+int icompare( const std::string &one,
+	const std::string &two );
 
 typedef bool (*output_callback_fn)( const char *, void * );
+typedef void (*launch_callback_fn)( void * );
 //
 // Run the specified program, blocks while program running
 //
@@ -80,6 +80,8 @@ typedef bool (*output_callback_fn)( const char *, void * );
 //		"prog" - program to run
 //		"args" - space separated args. An arg can be wrapped in double quotes
 //					if it contains spaces.
+//		"work_dir" - the working directory to run the program from. If empty, will
+//			try to pick one based on any path elements in  the "prog" argument.
 //		"cb" - callback function to call with stdout output from program
 //		"opaque" - opaque ptr to pass to the callback function.  run_program()
 //					doesn't care what this is.
@@ -89,16 +91,22 @@ typedef bool (*output_callback_fn)( const char *, void * );
 //					(use NULL for no hotkey checking)
 //		"joy_thresh" - joystick threshold, only used if exit_hotkey is mapped to
 //					a joystick
+//		"launch_cb" = callback function to call after program launched
+//		"launch_opaque" - opaque ptr to pass to the launch callback function.  run_program()
+//					doesn't care what this is.
 //
 //	Returns true if program ran successfully
 //
 bool run_program( const std::string &prog,
-	const::std::string &args,
+	const std::string &args,
+	const std::string &work_dir,
 	output_callback_fn cb = NULL,
 	void *opaque=NULL,
 	bool block=true,
 	const std::string &exit_hotkey="",
-	int joy_thresh=0 );
+	int joy_thresh=0,
+	launch_callback_fn launch_cb= NULL,
+	void *launch_opaque=NULL );
 
 //
 // Utility functions for file processing:
@@ -116,7 +124,7 @@ bool is_relative_path( const std::string &file );
 // if add_trailing_slash is true, this function adds a trailing '/' if
 // path is to a directory
 std::string clean_path( const std::string &path,
-		bool add_trailing_slash = false );
+	bool add_trailing_slash = false );
 
 // return path as an absolute path
 std::string absolute_path( const std::string &path );
@@ -129,16 +137,16 @@ std::string absolute_path( const std::string &path );
 // put the full path and name in "result" and return true if found
 //
 bool search_for_file( const std::string &base_path,
-                  const std::string &file,
-						const char **valid_extensions,
-                  std::string &result );
+	const std::string &file,
+	const char **valid_extensions,
+	std::string &result );
 
 //
 // Return list of subdirectories in path
 //
 bool get_subdirectories(
-			std::vector<std::string> &list,
-			const std::string &path );
+	std::vector<std::string> &list,
+	const std::string &path );
 //
 // Return "list" of the base filenames in "path" where the file extension
 // is in the vector "extensions"
@@ -146,10 +154,10 @@ bool get_subdirectories(
 // "list" is sorted alphabetically
 //
 bool get_basename_from_extension(
-			std::vector<std::string> &list,
-			const std::string &path,
-			const std::string &extension,
-			bool strip_extension = true );
+	std::vector<std::string> &list,
+	const std::string &path,
+	const std::string &extension,
+	bool strip_extension = true );
 
 //
 // Return "in_list" of filenames in "path" where the base filename is "base_name"
@@ -158,10 +166,10 @@ bool get_basename_from_extension(
 // NULL terminated list in "in_list".  All others go in "out_list".
 //
 bool get_filename_from_base( std::vector<std::string> &in_list,
-				std::vector<std::string> &out_list,
-				const std::string &path,
-				const std::string &base_name,
-				const char **ext_filter=NULL );
+	std::vector<std::string> &out_list,
+	const std::string &path,
+	const std::string &base_name,
+	const char **ext_filter=NULL );
 
 //
 // Get a filename that does not currently exist.
@@ -172,10 +180,10 @@ bool get_filename_from_base( std::vector<std::string> &in_list,
 // the returned string is the resulting basename only (no path or extension)
 //
 std::string get_available_filename(
-         const std::string &path,
-         const std::string &base,
-         const std::string &extension,
-         std::string &result );
+	const std::string &path,
+	const std::string &base,
+	const std::string &extension,
+	std::string &result );
 
 //
 // Create "base" directory if it doesn't exist
@@ -223,8 +231,8 @@ std::basic_string<sf::Uint32> clipboard_get_content();
 // namespace (Window, etc) clashes with the SFML namespace used in fe_window
 // (sf::Window)
 //
-#ifdef USE_XINERAMA
-void get_xinerama_geometry( int &, int &, int &, int & );
+#if defined(USE_XLIB)
+void get_x11_geometry( bool multimon, int &, int &, int &, int & );
 #endif
 
 #ifndef NO_MOVIE
@@ -253,6 +261,12 @@ bool line_to_setting_and_value( const std::string &line,
 	std::string &setting,
 	std::string &value,
 	const char *sep=FE_WHITESPACE );
+
+//
+// Non-blocking check for input on stdin
+// return true if input found, false otherwise
+//
+bool get_console_stdin( std::string &str );
 
 //
 // Windows systems: Hide the console window if not launched from the command line

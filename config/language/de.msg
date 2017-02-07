@@ -74,7 +74,6 @@ Enter Display Name;Bezeichnung des Bildschrim eingeben
 Enter Emulator Name;Name des Emulators eingeben
 Enter Filter Name;Bezeichnung des Filters eingeben
 Executable;Ausführbare Datei
-Exit (Confirm);Beenden (Bestätigen)
 Exit Attract-Mode;Attract-Mode beenden
 Exit Attract-Mode?;Attract-Mode beenden?
 Exit Command;Kommando zum Beenden
@@ -200,7 +199,7 @@ _help_control_custom2;Definiere die Taste(n) für "Eigendefiniert2"
 _help_control_displays_menu;Definiere die Taste(n), um das "Bildschirm Menü" anzuzeigen
 _help_control_down;Definiere die Taste(n), um die Auswahl nach unten zu bewegen
 _help_control_exit;Definiere die Taste(n), um das Frontend zu verlassen
-_help_control_exit_no_menu;Definiere die Taste(n), um das Frontend unmittelbar zum Desktop zu verlassen
+_help_control_exit_to_desktop;Definiere die Taste(n), um das Frontend unmittelbar zum Desktop zu verlassen
 _help_control_filters_menu;Definiere die Taste(n), um das "Filter Menü" anzuzeigen
 _help_control_next_display;Definiere die Taste(n), um zum nächsten Bildschirm zu springen
 _help_control_next_favourite;Definiere die Taste(n), um zum nächsten Favoriten zu springen
@@ -303,6 +302,7 @@ Basic Movie;Basis Video
 Configure available emulators;Verfügbare Emulatoren konfigurieren
 Configure filter rule;Filterregel konfigurieren
 Delete this filter;Diesen Filter löschen
+Exit;Beenden (Bestätigen)
 Image collage;Bilder Collage
 Launch Last Game on Startup;Letztes Spiel beim Starten ausführen
 Movie collage;Video Collage
@@ -322,11 +322,15 @@ _help_autolaunch_last_game;Beim Hochfahren automatisch das zuletzt gespielte Spi
 Add '$1' to Favourites?;Add '$1' to Favourites?
 Add Exception;Add Exception
 Add tag: '$1';Add tag: '$1'
+Buttons;Buttons
+Configure / Displays Menu;Configure / Displays Menu
 Configure Intro;Configure Intro
 Configure Layout;Configure Layout
+Confirm Exit;Confirm Exit
 Create new tag;Create new tag
 Custom Arguments;Custom Arguments
 Custom Executable;Custom Executable
+Default;Default
 Default Action;Default Action
 Delete game '$1'?;Delete game '$1'?
 Delete this Game;Delete this Game
@@ -337,15 +341,20 @@ Enter Romlist Name;Enter Romlist Name
 Enter new tag name;Enter new tag name
 Exception;Exception
 Exception Edit;Exception Edit
+Extra;Extra
 FileIsAvailable;FileIsAvailable
 Intro;Intro
 Launch Last Game;Launch Last Game
+Menu Prompt;Menu Prompt
+Menu Style / Layout;Menu Style / Layout
 Next Game;Next Game
+Overview;Overview
 Previous Game;Previous Game
 Remove '$1' from Favourites?;Remove '$1' from Favourites?
 Remove tag: '$1';Remove tag: '$1'
 Scrape Fanart;Scrape Fanart
 Scrape Videos (MAME only);Scrape Videos (MAME only)
+Scrape mamedb.com (MAME only);Scrape mamedb.com (MAME only)
 Show Displays Menu;Show Displays Menu
 Show Last Selection (Default);Show Last Selection (Default)
 Show in Cycle;Show in Cycle
@@ -353,7 +362,9 @@ Show in Menu;Show in Menu
 Startup Mode;Startup Mode
 Video Decoder;Video Decoder
 Window (No Border);Window (No Border)
+Working Directory;Working Directory
 multi;multi
+_help_confirm_exit;Confirm before exiting Attact-Mode?
 _help_control_back;Set the control(s) that go back
 _help_control_custom3;Set the "Custom3" control(s)
 _help_control_custom4;Set the "Custom4" control(s)
@@ -367,17 +378,23 @@ _help_control_prev_game;Set the control(s) that move to the previous game
 _help_control_right;Set the control(s) that move the selection right
 _help_display_in_cycle;Include this display in the "Previous Display"/"Next Display" cycle?
 _help_display_in_menu;Include this display in the "Displays Menu"?
+_help_displays_menu;Configure options for the "Displays Menu"
+_help_displays_menu_layout;The layout to use for the 'Displays Menu'. Set to 'Default' to use the frontend's built-in menu
+_help_displays_menu_prompt;The 'Displays Menu' prompt (i.e. "Select System")
 _help_emu_sel_gen_romlist;Generate a Collection/Romlist containing games for multiple emulators
+_help_emu_workdir;The working directory for this emulator.  This is the directory that the frontend runs the emulator from.  Also, any relative rom paths, artwork paths, or additional import file paths are treated as being relative to this directory
 _help_filter_add_exception;Add an exception to this filter.  If a game matches an exception (and wasn't filtered out by an earlier rule) it will be listed in the filter
 _help_filter_exception;Configure this filter exception.  If a game matches an exception it will be listed in the filter.  Rules and exceptions get applied in the order that they are listed
 _help_game_custom_args;Set this to override the default command line arguments for this game.  Set this to [nothing] if you want to override with no parameters.  The following get substituted appropriately: [name], [romext], [rompath], [emulator], [romfilename], [system], [systemn]
 _help_game_custom_executable;Set this to override the default executable for this game
 _help_game_delete;Delete this game from the Romlist
 _help_game_edit;Edit this game information
+_help_game_overview;Edit game overview
 _help_generator_build;Generate romlist with the selected emulator(s)
 _help_generator_opt;Set whether this emulator is to be included in the generated romlist
 _help_input_default_action;Set the default behaviour for this control
 _help_language;Select the language to use in Attract-Mode's user interface
 _help_multiple_monitors;Enable the use of multiple monitors by Attract-Mode
+_help_scrape_mamedb;Set whether mame snaps and marquees should be scraped from mamedb.com
 _help_startup_mode;Set what should happen when Attract-Mode first starts up
 _help_video_decoder;Configure the decoder to use for video playback (if multiple decoders are available)

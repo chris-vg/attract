@@ -11,6 +11,7 @@ _help_art_add;Add a new artwork resource (marquee images, screen shots, etc.)
 _help_art_label;The label that identifies this artwork resource (used by layouts)
 _help_art_path;The path to the files for this artwork.  Multiple paths can be entered if separated by a semicolon.
 _help_back;Exit menu
+_help_confirm_exit;Confirm the exiting of Attact-Mode
 _help_confirm_favs;Confirm the addition/removal of Favourites
 _help_control_add_favourite;Set the control(s) that mark/unmark the currently selected game as a favourite
 _help_control_add_tags;Set the control(s) that add/remove tags from the currently selected game
@@ -26,7 +27,7 @@ _help_control_displays_menu;Set the control(s) that show the "Displays Menu"
 _help_control_down;Set the control(s) that move the selection down
 _help_control_edit_game;Set the control(s) to edit the current selection
 _help_control_exit;Set the control(s) that exit the frontend
-_help_control_exit_no_menu;Set the control(s) that exit the frontend immediately to the desktop
+_help_control_exit_to_desktop;Set the control(s) that exit the frontend immediately to the desktop
 _help_control_filters_menu;Set the control(s) that show the "Filters Menu"
 _help_control_intro;Set the control(s) that show the intro video
 _help_control_left;Set the control(s) that move the selection left
@@ -70,9 +71,12 @@ _help_display_name;The title for this display
 _help_display_romlist;The collection/rom list to use for this display
 _help_display_sel;Configure display
 _help_displays;Configure the romlist/layout groupings (a.k.a. "Displays") that are available to be cycled through in Attract-Mode
+_help_displays_menu;Configure options for the "Displays Menu"
 _help_displays_menu_exit;Configure whether an Exit option should be provided in the"Displays Menu"
+_help_displays_menu_layout;The layout to use for the 'Displays Menu'. Set to 'Default' to use the frontend's built-in menu
+_help_displays_menu_prompt;The 'Displays Menu' prompt (i.e. "Select System")
 _help_emu_add;Add a new emulator
-_help_emu_args;The command line arguments for this emulator.  The following get substituted appropriately: [name], [romext], [rompath], [emulator], [romfilename], [system], [systemn]
+_help_emu_args;The command line arguments for this emulator.  The following get substituted appropriately: [name], [romext], [rompath], [emulator], [romfilename], [system], [systemn], [workdir], [nothing]
 _help_emu_delete;Delete the entry for this emulator
 _help_emu_executable;The full path and name of the emulator executable. $HOME gets replaced with the user's home dir
 _help_emu_exit_hotkey;Set a global hotkey to exit the emulator.  Attract-Mode will terminate the emulator process if this hotkey gets pressed
@@ -86,8 +90,9 @@ _help_emu_scrape_artwork;Scrape missing artwork images for this emulator from Th
 _help_emu_sel;Configure emulator
 _help_emu_sel_gen_romlist;Generate a Collection/Romlist containing games for multiple emulators
 _help_emu_system;The system identifier(s) for this emulator.  Multiple values can be entered if separated by a semicolon
+_help_emu_workdir;The working directory for this emulator.  This is the directory that the frontend runs the emulator from.  Also, any relative rom paths, artwork paths, or additional import file paths are treated as being relative to this directory
 _help_emulators;Configure emulator settings
-_help_exit_command;Command to execute when Exit (Confirm) is selected [i.e. "sudo shutdown"]
+_help_exit_command;Command to execute when exiting the frontend [i.e. "sudo shutdown"]
 _help_filter_add_exception;Add an exception to this filter.  If a game matches an exception (and wasn't filtered out by an earlier rule) it will be listed in the filter
 _help_filter_add_rule;Add a rule to this filter.  A game must match all filter rules (or a single exception) to be listed in a filter
 _help_filter_delete;Delete this filter
@@ -102,6 +107,7 @@ _help_game_custom_args;Set this to override the default command line arguments f
 _help_game_custom_executable;Set this to override the default executable for this game
 _help_game_delete;Delete this game from the Romlist
 _help_game_edit;Edit this game information
+_help_game_overview;Edit game overview
 _help_generator_build;Generate romlist with the selected emulator(s)
 _help_generator_opt;Set whether this emulator is to be included in the generated romlist
 _help_hide_brackets;Hide text in brackets when showing game titles
@@ -125,6 +131,7 @@ _help_rule_target;The game information attribute that you wish to filter based o
 _help_rule_value;The regular expression value to filter to.  For example, if the filter target is "Year" and comparison is "equals", a value of "1984" will match the year of 1984, "198." will match any year in the 80s, and "(198.)|(199.)" will match any year in the 80s or 90s
 _help_scrape_fanart;Set whether game fanart should be downloaded when scraping
 _help_scrape_flyers;Set whether game flyers and box covers should be downloaded when scraping
+_help_scrape_mamedb;Set whether mame snaps and marquees should be scraped from mamedb.com
 _help_scrape_marquees;Set whether game marquees and banners should be downloaded when scraping
 _help_scrape_snaps;Set whether game snapshots should be downloaded when scraping
 _help_scrape_vids;Set whether game videos should be downloaded when scraping
@@ -144,6 +151,7 @@ _sort_regexp;^(Vs\. The |The |Vs\. )
 #
 # Extra strings provided by translation
 #
+cn;中文 (Chinese)
 de;Deutsch
 en;English
 es;Español
